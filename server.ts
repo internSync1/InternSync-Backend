@@ -6,7 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import bodyParser from "body-parser";
 import { connect } from "./connection/connection";
 import routeManager from './routes/router.manager'
-import swaggerDocument from './common/swagger/swagger';
+import swaggerDocument from './Common/swagger/swagger';
 // import logger from "./common/logger/logger";
 
 
