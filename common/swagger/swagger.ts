@@ -7,8 +7,8 @@ const swaggerDocument = {
   },
   "servers": [
     {
-      "url": `http://localhost:${process.env.SERVER_PORT}`,
-      "description": "Development server"
+      "url": "https://internsync-production.up.railway.app",
+      "description": "Production server"
     }
   ],
   "tags": [
