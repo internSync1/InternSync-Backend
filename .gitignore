@@ -5,6 +5,14 @@ node_modules/
 .env
 .env.*
 
+# Firebase service account keys
+firebase/serviceAccountKey.json
+firebase/*.json
+firebase/*.key
+
+# Frontend test files
+index.html
+
 # Logs
 logs/
 *.log

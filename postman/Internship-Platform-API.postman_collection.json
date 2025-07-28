@@ -1,0 +1,484 @@
+{
+  "info": {
+    "name": "Internship Platform API",
+    "description": "Complete API collection for the Internship Platform with Firebase Authentication",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "internship-platform-api"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{firebase_id_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "firebase_id_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Sync User with Firebase",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/user/sync",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "user", "sync"]
+            },
+            "description": "Creates or fetches a user in MongoDB based on the authenticated Firebase user. Requires a valid Firebase ID token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Profile",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "user", "profile"]
+            },
+            "description": "Fetches the profile of the authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phoneNumber\": \"+1234567890\",\n  \"profilePicture\": \"https://example.com/avatar.jpg\",\n  \"gender\": \"male\",\n  \"dateOfBirth\": \"1990-01-01\",\n  \"aboutMe\": \"Software developer with 5 years of experience\",\n  \"resumeUrl\": \"https://example.com/resume.pdf\",\n  \"workExperience\": [\n    {\n      \"jobTitle\": \"Senior Developer\",\n      \"company\": \"Tech Corp\",\n      \"startDate\": \"2020-01-01\",\n      \"endDate\": \"2023-01-01\",\n      \"current\": false,\n      \"description\": \"Led development team of 5 developers\"\n    }\n  ],\n  \"education\": [\"Bachelor's in Computer Science\"],\n  \"skills\": [\"JavaScript\", \"React\", \"Node.js\"],\n  \"languages\": [\"English\", \"Spanish\"],\n  \"appreciation\": [\"Best Developer Award 2022\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "user", "profile"]
+            },
+            "description": "Updates the profile of the authenticated user."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "File Management",
+      "item": [
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/file/upload",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "file", "upload"]
+            },
+            "description": "Uploads a file (e.g., resume, profile picture) to the server. The server will store the file and return its URL and other metadata."
+          },
+          "response": []
+        },
+        {
+          "name": "Download File",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/file/download/{{filename}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "file", "download", "{{filename}}"]
+            },
+            "description": "Downloads a specific file from the server using its unique filename."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete File",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/file/delete/{{filename}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "file", "delete", "{{filename}}"]
+            },
+            "description": "Deletes a specific file from the server using its unique filename."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "Get All Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/job?freeText=software&pageNo=1&offset=10",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "job"],
+              "query": [
+                {
+                  "key": "freeText",
+                  "value": "software",
+                  "description": "Search on multiple fields like title, company, location, etc."
+                },
+                {
+                  "key": "pageNo",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "offset",
+                  "value": "10",
+                  "description": "Number of items per page"
+                }
+              ]
+            },
+            "description": "Retrieves a list of jobs, optionally filtered by status."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Job (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designation\": \"Senior Software Engineer\",\n  \"company\": {\n    \"name\": \"Global Corp\",\n    \"aboutUs\": \"Leading innovation worldwide.\",\n    \"gallery\": [\"img_url1.jpg\", \"img_url2.png\"],\n    \"address\": \"789 Business Ave, Metropolis\",\n    \"hours\": \"Mon-Fri, 8am - 5pm\",\n    \"phone\": \"+1-555-0200\",\n    \"website\": \"https://globalcorp.example.com\"\n  },\n  \"description\": {\n    \"details\": \"Lead and manage key development projects.\",\n    \"requirements\": \"5+ years experience in software development, project management.\",\n    \"stipend\": {\n      \"currency\": \"USD\",\n      \"amount\": 80000\n    }\n  },\n  \"duration\": \"Full-time\",\n  \"location\": \"New York, NY\",\n  \"labels\": [\"Remote\", \"Full-time\", \"Engineering\"],\n  \"startDate\": \"2024-01-01\",\n  \"endDate\": \"2024-12-31\",\n  \"applicationDeadline\": \"2023-12-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/job",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "job"]
+            },
+            "description": "Adds a new job to the platform. Requires admin privileges."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Job by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/job/{{job_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "job", "{{job_id}}"]
+            },
+            "description": "Retrieves a specific job by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Job (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designation\": \"Senior Software Engineer - Updated\",\n  \"company\": {\n    \"name\": \"Global Corp\",\n    \"aboutUs\": \"Leading innovation worldwide.\",\n    \"gallery\": [\"img_url1.jpg\", \"img_url2.png\"],\n    \"address\": \"789 Business Ave, Metropolis\",\n    \"hours\": \"Mon-Fri, 8am - 5pm\",\n    \"phone\": \"+1-555-0200\",\n    \"website\": \"https://globalcorp.example.com\"\n  },\n  \"description\": {\n    \"details\": \"Lead and manage key development projects.\",\n    \"requirements\": \"5+ years experience in software development, project management.\",\n    \"stipend\": {\n      \"currency\": \"USD\",\n      \"amount\": 85000\n    }\n  },\n  \"duration\": \"Full-time\",\n  \"location\": \"New York, NY\",\n  \"labels\": [\"Remote\", \"Full-time\", \"Engineering\"],\n  \"startDate\": \"2024-01-01\",\n  \"endDate\": \"2024-12-31\",\n  \"applicationDeadline\": \"2023-12-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/job/{{job_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "job", "{{job_id}}"]
+            },
+            "description": "Updates a specific job by its ID. Requires admin privileges."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Job (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/job/{{job_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "job", "{{job_id}}"]
+            },
+            "description": "Deletes a specific job by its ID. Requires admin privileges."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "item": [
+        {
+          "name": "Submit Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jobId\": \"{{job_id}}\",\n  \"applicantName\": \"John Doe\",\n  \"portfolioUrl\": \"https://portfolio.example.com\",\n  \"resumeUrl\": \"https://resume.example.com\",\n  \"text\": \"I am interested in this position and believe my skills align well with the requirements.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/application",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "application"]
+            },
+            "description": "Submits a new job application. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/application",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "application"]
+            },
+            "description": "Retrieves a list of applications submitted by the authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Application by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/application/{{application_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "application", "{{application_id}}"]
+            },
+            "description": "Retrieves a specific application by its ID."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bookmarks",
+      "item": [
+        {
+          "name": "Bookmark Job",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/bookmark/{{job_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "bookmark", "{{job_id}}"]
+            },
+            "description": "Adds a job to the user's bookmarks. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Bookmark",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/bookmark/{{job_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "bookmark", "{{job_id}}"]
+            },
+            "description": "Removes a job from the user's bookmarks. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Bookmarks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/bookmark/user",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "bookmark", "user"]
+            },
+            "description": "Retrieves a list of all jobs bookmarked by the currently authenticated user."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Interests",
+      "item": [
+        {
+          "name": "Create Interest (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Software Development\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/interests",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "interests"]
+            },
+            "description": "Adds a new interest to the system. Admin privileges are typically required."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Interests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/interests",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "interests"]
+            },
+            "description": "Retrieves a list of all interests marked as active."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Interest (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/interests/{{interest_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "interests", "{{interest_id}}"]
+            },
+            "description": "Deletes a specific interest using its unique ID. Admin privileges are typically required."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Questions",
+      "item": [
+        {
+          "name": "Create Question (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What is your experience with React?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/questions",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "questions"]
+            },
+            "description": "Adds a new question to the system. Admin privileges are typically required."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Questions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/questions",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "questions"]
+            },
+            "description": "Retrieves a list of all questions marked as active."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Question (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/questions/{{question_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "questions", "{{question_id}}"]
+            },
+            "description": "Deletes a specific question using its unique ID. Admin privileges are typically required."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+} 

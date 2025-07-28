@@ -1,7 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import { createSignedToken } from "../utils/auth";
-import bcrypt from "bcryptjs";
 import { IUserDocument, WorkExperience } from "../types/userType";
 import { UserRole } from "../constant/userRoles";
 
@@ -17,6 +15,7 @@ const WorkExperienceSchema = new Schema<WorkExperience>({
 const UserSchema = new Schema<IUserDocument>(
   {
     _id: { type: String, default: uuidv4, required: true },
+    firebaseUid: { type: String, required: true, unique: true },
     firstName: {
       type: String,
       trim: true,
@@ -45,11 +44,6 @@ const UserSchema = new Schema<IUserDocument>(
     },
     gender: {
       type: String,
-    },
-    password: {
-      type: String,
-      minlength: 8,
-      select: false,
     },
     dateOfBirth: {
       type: Date,
@@ -80,30 +74,6 @@ const UserSchema = new Schema<IUserDocument>(
   },
   { timestamps: true, versionKey: false }
 );
-
-// Encrypt password using bcrypt
-UserSchema.pre<IUserDocument>(
-  "save",
-  async function (this: IUserDocument, next) {
-    if (!this.isModified("password")) next();
-
-    if (this.password) {
-      const salt = await bcrypt.genSalt(10);
-      this.password = await bcrypt.hash(this.password, salt);
-    }
-  }
-);
-
-// Methods to generate JWT tokens
-UserSchema.methods.getSignedJwtToken = function (this: IUserDocument) {
-  return createSignedToken(
-    this,
-    process.env.JWT_SECRET_KEY,
-    process.env.JWT_EXPIRE_TIME
-  );
-};
-
-// UserSchema.index({ email: 1 });
 
 const User = mongoose.model<IUserDocument>("User", UserSchema);
 export default User;

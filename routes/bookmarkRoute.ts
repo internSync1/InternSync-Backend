@@ -4,13 +4,13 @@ import {
   removeBookmark,
   getUserBookmarks,
 } from "../controllers/bookmarkController";
-import { protect } from "../common/middleware/auth";
+import { firebaseAuth } from "../common/middleware/firebaseAuth";
 
 const router = express.Router();
 
 // Applicant routes
-router.get("/user", protect, getUserBookmarks);
-router.post("/job/:jobId", protect, addBookmark);
-router.delete("/job/:jobId", protect, removeBookmark);
+router.get("/user", firebaseAuth, (req, res, next) => getUserBookmarks(req as any, res, next));
+router.post("/job/:jobId", firebaseAuth, (req, res, next) => addBookmark(req as any, res, next));
+router.delete("/job/:jobId", firebaseAuth, (req, res, next) => removeBookmark(req as any, res, next));
 
 export default router;

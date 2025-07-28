@@ -15,7 +15,7 @@ const app = express();
 app.use(helmet());
 app.use(bodyParser.json());
 
-const serverPort = process.env.SERVER_PORT || 3000;
+const serverPort = process.env.SERVER_PORT || 5000;
 
 connect().then(() => {
   try {

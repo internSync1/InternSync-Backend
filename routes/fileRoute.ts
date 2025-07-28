@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import { uploadFile, downloadFile, deleteFile } from '../controllers/fileController';
-import { protect } from '../common/middleware/auth'; // Assuming you want to protect these routes
+import { firebaseAuth } from '../common/middleware/firebaseAuth';
 
 const router = express.Router();
 
@@ -40,8 +40,8 @@ function checkFileType(file: Express.Multer.File, cb: multer.FileFilterCallback)
 
 
 // Routes
-router.post('/upload', protect, upload.single('file'), uploadFile);
-router.get('/download/:filename', protect, downloadFile);
-router.delete('/delete/:filename', protect, deleteFile);
+router.post('/upload', firebaseAuth, upload.single('file'), (req, res, next) => uploadFile(req as any, res, next));
+router.get('/download/:filename', firebaseAuth, (req, res, next) => downloadFile(req as any, res, next));
+router.delete('/delete/:filename', firebaseAuth, (req, res, next) => deleteFile(req as any, res, next));
 
 export default router;

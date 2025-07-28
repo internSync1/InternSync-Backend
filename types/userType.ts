@@ -11,6 +11,7 @@ export interface WorkExperience {
 }
 
 export interface IUserDocument extends Document {
+  firebaseUid: string;
   firstName: string;
   lastName?: string;
   email?: string;
@@ -18,7 +19,6 @@ export interface IUserDocument extends Document {
   profilePicture?: string;
   gender?: string;
   countryCode?: string;
-  password?: string;
   country?: string;
   state?: string;
   nationality?: string;
@@ -39,11 +39,6 @@ export interface IUserDocument extends Document {
   skills: string[];
   languages: string[];
   appreciation: string[];
-  getSignedJwtToken(): string;
-  matchPassword(): boolean;
 }
 
-export interface ITokenDecode {
-  id: string;
-  userType: string;
-}
+
