@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 dotenv.config();
-import express, { Request,Response, NextFunction } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import swaggerUi from 'swagger-ui-express';
 import bodyParser from "body-parser";
@@ -15,7 +15,7 @@ const app = express();
 app.use(helmet());
 app.use(bodyParser.json());
 
-const serverPort = process.env.SERVER_PORT || 5000;
+const serverPort = process.env.PORT || 5000;
 
 connect().then(() => {
   try {
