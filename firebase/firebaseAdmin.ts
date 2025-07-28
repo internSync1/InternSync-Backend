@@ -1,12 +1,26 @@
 import admin from 'firebase-admin';
-import path from 'path';
+import dotenv from 'dotenv';
 
-const serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
+dotenv.config();
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+let serviceAccountKey: admin.ServiceAccount;
+
+if (process.env.NODE_ENV === 'production' && process.env.FIREBASE_CREDENTIALS_JSON) {
+  // In production, use the environment variable.
+  serviceAccountKey = JSON.parse(process.env.FIREBASE_CREDENTIALS_JSON);
+} else {
+  // In development, use the local service account file.
+  try {
+    serviceAccountKey = require('./serviceAccountKey.json');
+  } catch (error) {
+    console.error('Error: serviceAccountKey.json not found.');
+    console.error('Please ensure you have the service account key file in the /firebase directory for local development.');
+    process.exit(1);
+  }
 }
 
-export default admin; 
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccountKey),
+});
+
+export default admin;

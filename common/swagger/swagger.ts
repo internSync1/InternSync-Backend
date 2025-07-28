@@ -165,8 +165,8 @@ const swaggerDocument: any = {
         "required": ["name"]
       },
       "InterestInput": {
-        "type": "object",
-        "properties": {
+              "type": "object",
+              "properties": {
           "name": { "type": "string", "example": "Software Development" }
         },
         "required": ["name"]
@@ -237,8 +237,8 @@ const swaggerDocument: any = {
       },
       "SuccessConfirmationResponse": {
         "type": "object",
-        "properties": {
-          "success": { "type": "boolean", "example": true },
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
           "message": { "type": "string", "example": "Item deleted successfully" }
         }
       },
@@ -310,11 +310,11 @@ const swaggerDocument: any = {
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
             }
           }
         }
-      },
+      }
+    },
       "put": {
         "tags": ["User Profile"],
         "summary": "Update user profile",
@@ -431,7 +431,7 @@ const swaggerDocument: any = {
           "404": { "description": "File not found.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
           "500": { "description": "Internal server error during file download.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
         }
-      }
+        }
     },
     "/v1/file/delete/{filename}": {
       "delete": {
@@ -1131,4 +1131,4 @@ const swaggerDocument: any = {
   }
 };
 
-export default swaggerDocument; 
+export default swaggerDocument;
