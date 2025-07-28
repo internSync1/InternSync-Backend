@@ -1,3 +1,19 @@
+# Postman Collections & Environments
+
+## Sandbox Environment
+
+A new Postman environment is available for testing against the sandbox deployment:
+
+- **Environment Name:** Internship-Platform-SANDBOX-Environment
+- **Base URL:** https://internsync-sandbox-production.up.railway.app
+
+### How to Use
+1. Import the `Internship-Platform-SANDBOX-Environment.postman_environment.json` file into Postman.
+2. Select this environment when testing against the sandbox server.
+3. Use your Firebase ID token for authentication as usual.
+
+You can duplicate or adapt requests from the main collection to use this environment for safe testing.
+
 # Postman Collection for Internship Platform API
 
 This folder contains all the Postman files needed to test the Firebase-authenticated Internship Platform API.
