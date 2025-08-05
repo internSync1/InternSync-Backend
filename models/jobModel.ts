@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from "uuid";
 
 const JobCompanySchema = new Schema<IJobCompany>({
     name: { type: String, required: [true, "Company name is required"] },
+    logoUrl: String,
+    industry: String,
     aboutUs: String,
     gallery: [{ type: String }],
     address: String,
@@ -23,9 +25,14 @@ const JobDescriptionSchema = new Schema<IJobDescription>({
     },
 }, { _id: false });
 
-const jobSchemaModel = {
+const VisibilitySchema = new Schema({
+    displayInApp: { type: Boolean, default: true },
+    featured: { type: Boolean, default: false },
+}, { _id: false });
+
+const jobSchema = new Schema<IJob>({
     _id: { type: String, default: uuidv4, required: true },
-    designation: { type: String, required: [true, "Job designation is required"] },
+    title: { type: String, required: [true, "Job title is required"] },
     company: { type: JobCompanySchema, required: true },
     description: { type: JobDescriptionSchema, required: true },
     duration: String,
@@ -39,9 +46,11 @@ const jobSchemaModel = {
         enum: Object.values(jobStatus),
         default: jobStatus.OPEN,
     },
-}
-
-const jobSchema = new Schema<IJob>(jobSchemaModel, { timestamps: true, autoIndex: true, minimize: false, versionKey: false });
+    jobType: String,
+    weeklyHours: Number,
+    isRemote: Boolean,
+    visibility: { type: VisibilitySchema, required: true },
+}, { timestamps: true, autoIndex: true, minimize: false, versionKey: false });
 
 jobSchema.pre('findOneAndUpdate', function (): void {
     this.set({

@@ -3,6 +3,8 @@ import { jobStatus } from "../constant/jobStatus";
 
 export interface IJobCompany {
     name: string;
+    logoUrl?: string;
+    industry?: string;
     aboutUs?: string;
     gallery?: string[];
     address?: string;
@@ -29,10 +31,17 @@ export interface IJob extends Document {
     description: IJobDescription;
     duration?: string;
     location?: string;
-    stipend?: string;
     skillsRequired: string[];
+    labels?: string[];
     startDate?: Date;
     endDate?: Date;
     applicationDeadline?: Date;
     status: jobStatus;
+    jobType?: string;
+    weeklyHours?: number;
+    isRemote?: boolean;
+    visibility: {
+        displayInApp: boolean;
+        featured: boolean;
+    };
 }

@@ -6,6 +6,7 @@ import questionsRoute from "../routes/questionsRoute";
 import applicationRoute from "../routes/applicationRoute";
 import bookmarkRoute from "../routes/bookmarkRoute";
 import fileRoute from '../routes/fileRoute';
+import dashboardRoute from "../routes/dashboardRoute";
 
 
 
@@ -17,6 +18,7 @@ router.use("/v1/interests", interestsRoute)
 router.use("/v1/questions", questionsRoute)
 router.use('/v1/application', applicationRoute)
 router.use('/v1/bookmark', bookmarkRoute)
-router.use('/v1/file', fileRoute)
+router.use('/v1/file', fileRoute);
+router.use("/v1/dashboard", dashboardRoute);
 
 export default router

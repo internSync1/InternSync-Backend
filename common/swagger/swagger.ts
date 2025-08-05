@@ -49,6 +49,8 @@ const swaggerDocument: any = {
         "type": "object",
         "properties": {
           "name": { "type": "string", "example": "Global Corp" },
+          "logoUrl": { "type": "string", "example": "https://example.com/logo.png" },
+          "industry": { "type": "string", "example": "Technology" },
           "aboutUs": { "type": "string", "example": "Leading innovation worldwide." },
           "gallery": { "type": "array", "items": { "type": "string" }, "example": ["img_url1.jpg", "img_url2.png", "img_url3.jpg"] },
           "address": { "type": "string", "example": "789 Business Ave, Metropolis" },
@@ -77,7 +79,7 @@ const swaggerDocument: any = {
         "type": "object",
         "properties": {
           "_id": { "type": "string", "format": "uuid", "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef" },
-          "designation": { "type": "string", "example": "Senior Software Engineer" },
+          "title": { "type": "string", "example": "Senior Software Engineer" },
           "company": { "$ref": "#/components/schemas/JobCompany" },
           "description": { "$ref": "#/components/schemas/JobDescription" },
           "duration": { "type": "string", "example": "Full-time" },
@@ -87,6 +89,16 @@ const swaggerDocument: any = {
           "endDate": { "type": "string", "format": "date" },
           "applicationDeadline": { "type": "string", "format": "date" },
           "status": { "type": "string", "enum": ["OPEN", "CLOSED", "DRAFT"], "example": "OPEN" },
+          "jobType": { "type": "string", "example": "Full-Time" },
+          "weeklyHours": { "type": "number", "example": 40 },
+          "isRemote": { "type": "boolean", "example": true },
+          "visibility": {
+            "type": "object",
+            "properties": {
+              "displayInApp": { "type": "boolean", "example": true },
+              "featured": { "type": "boolean", "example": false }
+            }
+          },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" }
         },
@@ -95,7 +107,17 @@ const swaggerDocument: any = {
       "JobRequest": {
         "type": "object",
         "properties": {
-          "designation": { "type": "string", "example": "Senior Software Engineer" },
+          "title": { "type": "string", "example": "Senior Software Engineer" },
+          "jobType": { "type": "string", "example": "Full-Time" },
+          "weeklyHours": { "type": "number", "example": 40 },
+          "isRemote": { "type": "boolean", "example": true },
+          "visibility": {
+            "type": "object",
+            "properties": {
+              "displayInApp": { "type": "boolean", "example": true },
+              "featured": { "type": "boolean", "example": false }
+            }
+          },
           "company": { "$ref": "#/components/schemas/JobCompany" },
           "description": { "$ref": "#/components/schemas/JobDescription" },
           "duration": { "type": "string", "example": "Full-time" },
@@ -105,7 +127,7 @@ const swaggerDocument: any = {
           "endDate": { "type": "string", "format": "date" },
           "applicationDeadline": { "type": "string", "format": "date" }
         },
-        "required": ["designation", "company", "description"]
+        "required": ["title", "company", "description", "applicationDeadline"]
       },
       "Application": {
         "type": "object",
