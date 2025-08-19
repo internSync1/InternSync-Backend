@@ -23,4 +23,5 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccountKey),
 });
 
+
 export default admin;
