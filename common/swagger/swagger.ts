@@ -13,6 +13,7 @@ const swaggerDocument: any = {
   ],
   "tags": [
     { "name": "Applications", "description": "Endpoints for managing job applications" },
+    { "name": "Authentication", "description": "Endpoints for Firebase authentication and user sync" },
     { "name": "User Profile", "description": "Endpoints for managing user profiles" },
     { "name": "Jobs", "description": "Endpoints for managing jobs" },
     { "name": "Bookmarks", "description": "Endpoints for managing user bookmarks" },
@@ -187,8 +188,8 @@ const swaggerDocument: any = {
         "required": ["name"]
       },
       "InterestInput": {
-              "type": "object",
-              "properties": {
+        "type": "object",
+        "properties": {
           "name": { "type": "string", "example": "Software Development" }
         },
         "required": ["name"]
@@ -259,8 +260,8 @@ const swaggerDocument: any = {
       },
       "SuccessConfirmationResponse": {
         "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
+        "properties": {
+          "success": { "type": "boolean", "example": true },
           "message": { "type": "string", "example": "Item deleted successfully" }
         }
       },
@@ -270,15 +271,57 @@ const swaggerDocument: any = {
           "success": { "type": "boolean", "example": false },
           "message": { "type": "string", "example": "Error message" }
         }
+      },
+      "AuthStatusResponse": {
+        "type": "object",
+        "properties": {
+          "authenticated": { "type": "boolean", "example": true },
+          "authStatus": { "type": "string", "enum": ["valid", "expired", "missing"], "example": "valid" },
+          "user": {
+            "type": "object",
+            "properties": {
+              "uid": { "type": "string", "example": "firebase_uid_123" },
+              "email": { "type": "string", "example": "user@example.com" }
+            },
+            "nullable": true
+          }
+        }
+      },
+      "LazyAuthErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string", "example": "Authentication token has expired. Please refresh your token." },
+          "authStatus": { "type": "string", "enum": ["expired", "missing", "invalid"], "example": "expired" },
+          "requiresReauth": { "type": "boolean", "example": true }
+        }
       }
     }
   },
   "paths": {
+    "/v1/user/auth-status": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Check authentication status",
+        "description": "Checks the current authentication status. Works with valid, expired, or missing tokens. Returns authStatus and user info if available. Uses lazy authentication.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Authentication status retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthStatusResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/user/sync": {
       "post": {
-        "tags": ["User Profile"],
+        "tags": ["Authentication"],
         "summary": "Sync Firebase user with backend",
-        "description": "Creates or fetches a user in MongoDB based on the authenticated Firebase user. Requires a valid Firebase ID token.",
+        "description": "Creates or fetches a user in MongoDB based on the authenticated Firebase user. Uses lazy authentication - handles expired tokens gracefully with proper error responses instead of immediate failure.",
         "security": [{ "BearerAuth": [] }],
         "responses": {
           "200": {
@@ -289,17 +332,18 @@ const swaggerDocument: any = {
                   "type": "object",
                   "properties": {
                     "success": { "type": "boolean", "example": true },
-                    "user": { "$ref": "#/components/schemas/User" }
+                    "user": { "$ref": "#/components/schemas/User" },
+                    "authStatus": { "type": "string", "example": "valid" }
                   }
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized. Invalid or missing Firebase ID token.",
+            "description": "Authentication issues - expired, missing, or invalid token.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                "schema": { "$ref": "#/components/schemas/LazyAuthErrorResponse" }
               }
             }
           }
@@ -332,11 +376,11 @@ const swaggerDocument: any = {
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
             }
           }
         }
-      }
-    },
+      },
       "put": {
         "tags": ["User Profile"],
         "summary": "Update user profile",
@@ -411,7 +455,11 @@ const swaggerDocument: any = {
           },
           "400": {
             "description": "Bad request (e.g., no file provided, invalid file type, file too large).",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized. User needs to be logged in.",
@@ -453,7 +501,7 @@ const swaggerDocument: any = {
           "404": { "description": "File not found.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
           "500": { "description": "Internal server error during file download.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
         }
-        }
+      }
     },
     "/v1/file/delete/{filename}": {
       "delete": {

@@ -32,6 +32,90 @@
       "name": "Authentication",
       "item": [
         {
+          "name": "Check Auth Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/user/auth-status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "user",
+                "auth-status"
+              ]
+            },
+            "description": "Checks the current authentication status. Works with valid, expired, or missing tokens. Returns authStatus and user info if available."
+          },
+          "response": [
+            {
+              "name": "Valid Token",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{firebase_id_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/user/auth-status",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "user",
+                    "auth-status"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"authenticated\": true,\n  \"authStatus\": \"valid\",\n  \"user\": {\n    \"uid\": \"firebase_uid_123\",\n    \"email\": \"user@example.com\"\n  }\n}"
+            },
+            {
+              "name": "Expired Token",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer expired_token"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/user/auth-status",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "user",
+                    "auth-status"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"authenticated\": false,\n  \"authStatus\": \"expired\",\n  \"user\": null\n}"
+            }
+          ]
+        },
+        {
           "name": "Sync User with Firebase",
           "request": {
             "method": "POST",
@@ -47,12 +131,85 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/user/sync",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "user", "sync"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "user",
+                "sync"
+              ]
             },
-            "description": "Creates or fetches a user in MongoDB based on the authenticated Firebase user. Requires a valid Firebase ID token."
+            "description": "Creates or fetches a user in MongoDB based on the authenticated Firebase user. Now uses lazy authentication - handles expired tokens gracefully with proper error responses."
           },
-          "response": []
+          "response": [
+            {
+              "name": "Success - Valid Token",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{firebase_id_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/user/sync",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "user",
+                    "sync"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"user\": {\n    \"_id\": \"user_id\",\n    \"firebaseUid\": \"firebase_uid_123\",\n    \"email\": \"user@example.com\",\n    \"firstName\": \"John\",\n    \"isActive\": true\n  },\n  \"authStatus\": \"valid\"\n}"
+            },
+            {
+              "name": "Error - Expired Token",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer expired_token"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/user/sync",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "user",
+                    "sync"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Authentication token has expired. Please refresh your token.\",\n  \"authStatus\": \"expired\",\n  \"requiresReauth\": true\n}"
+            }
+          ]
         }
       ]
     },
@@ -66,8 +223,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/user/profile",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "user", "profile"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "user",
+                "profile"
+              ]
             },
             "description": "Fetches the profile of the authenticated user."
           },
@@ -89,8 +252,14 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/user/profile",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "user", "profile"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "user",
+                "profile"
+              ]
             },
             "description": "Updates the profile of the authenticated user."
           },
@@ -118,8 +287,14 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/file/upload",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "file", "upload"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "file",
+                "upload"
+              ]
             },
             "description": "Uploads a file (e.g., resume, profile picture) to the server. The server will store the file and return its URL and other metadata."
           },
@@ -132,8 +307,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/file/download/{{filename}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "file", "download", "{{filename}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "file",
+                "download",
+                "{{filename}}"
+              ]
             },
             "description": "Downloads a specific file from the server using its unique filename."
           },
@@ -146,8 +328,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/file/delete/{{filename}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "file", "delete", "{{filename}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "file",
+                "delete",
+                "{{filename}}"
+              ]
             },
             "description": "Deletes a specific file from the server using its unique filename."
           },
@@ -165,8 +354,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/job?freeText=software&pageNo=1&offset=10",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "job"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "job"
+              ],
               "query": [
                 {
                   "key": "freeText",
@@ -205,8 +399,13 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/job",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "job"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "job"
+              ]
             },
             "description": "Adds a new job to the platform. Requires admin privileges."
           },
@@ -219,8 +418,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/job/{{job_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "job", "{{job_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "job",
+                "{{job_id}}"
+              ]
             },
             "description": "Retrieves a specific job by its ID."
           },
@@ -242,8 +447,14 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/job/{{job_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "job", "{{job_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "job",
+                "{{job_id}}"
+              ]
             },
             "description": "Updates a specific job by its ID. Requires admin privileges."
           },
@@ -256,8 +467,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/job/{{job_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "job", "{{job_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "job",
+                "{{job_id}}"
+              ]
             },
             "description": "Deletes a specific job by its ID. Requires admin privileges."
           },
@@ -284,8 +501,13 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/application",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "application"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "application"
+              ]
             },
             "description": "Submits a new job application. Requires authentication."
           },
@@ -298,8 +520,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/application",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "application"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "application"
+              ]
             },
             "description": "Retrieves a list of applications submitted by the authenticated user."
           },
@@ -312,8 +539,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/application/{{application_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "application", "{{application_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "application",
+                "{{application_id}}"
+              ]
             },
             "description": "Retrieves a specific application by its ID."
           },
@@ -331,8 +564,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/bookmark/{{job_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "bookmark", "{{job_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "bookmark",
+                "{{job_id}}"
+              ]
             },
             "description": "Adds a job to the user's bookmarks. Requires authentication."
           },
@@ -345,8 +584,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/bookmark/{{job_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "bookmark", "{{job_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "bookmark",
+                "{{job_id}}"
+              ]
             },
             "description": "Removes a job from the user's bookmarks. Requires authentication."
           },
@@ -359,8 +604,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/bookmark/user",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "bookmark", "user"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "bookmark",
+                "user"
+              ]
             },
             "description": "Retrieves a list of all jobs bookmarked by the currently authenticated user."
           },
@@ -387,8 +638,13 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/interests",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "interests"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "interests"
+              ]
             },
             "description": "Adds a new interest to the system. Admin privileges are typically required."
           },
@@ -401,8 +657,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/interests",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "interests"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "interests"
+              ]
             },
             "description": "Retrieves a list of all interests marked as active."
           },
@@ -415,8 +676,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/interests/{{interest_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "interests", "{{interest_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "interests",
+                "{{interest_id}}"
+              ]
             },
             "description": "Deletes a specific interest using its unique ID. Admin privileges are typically required."
           },
@@ -443,8 +710,13 @@
             },
             "url": {
               "raw": "{{base_url}}/v1/questions",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "questions"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "questions"
+              ]
             },
             "description": "Adds a new question to the system. Admin privileges are typically required."
           },
@@ -457,8 +729,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/questions",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "questions"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "questions"
+              ]
             },
             "description": "Retrieves a list of all questions marked as active."
           },
@@ -471,8 +748,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/v1/questions/{{question_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "questions", "{{question_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "questions",
+                "{{question_id}}"
+              ]
             },
             "description": "Deletes a specific question using its unique ID. Admin privileges are typically required."
           },
@@ -481,4 +764,4 @@
       ]
     }
   ]
-} 
+}
