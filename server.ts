@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import express, { Request, Response, NextFunction } from "express";
 import helmet from "helmet";
+import cors from "cors";
 import swaggerUi from 'swagger-ui-express';
 import bodyParser from "body-parser";
 import { connect } from "./connection/connection";
@@ -11,6 +12,16 @@ import swaggerDocument from './common/swagger/swagger';
 
 const app = express();
 
+// CORS configuration
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || ['http://localhost:3000', 'http://localhost:3001'],
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
 app.use(helmet());
 app.use(bodyParser.json());
 

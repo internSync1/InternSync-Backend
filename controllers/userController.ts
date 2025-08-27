@@ -2,14 +2,42 @@ import { Request, Response, NextFunction } from "express";
 import asyncHandler from "../common/middleware/async";
 import User from "../models/userModel";
 
-// Extend Request to include user property
+// Extend Request to include user property and auth status
 interface AuthRequest extends Request {
   user: any;
+  authStatus?: 'valid' | 'expired' | 'missing';
 }
 
 // Sync user with Firebase UID and email
 export const syncUserWithFirebase = asyncHandler(async (req: AuthRequest, res: Response) => {
   console.log("SYNC ROUTE HIT", req.method, req.originalUrl);
+
+  // Handle different auth states
+  if (req.authStatus === 'missing') {
+    return res.status(401).json({
+      success: false,
+      message: "No authentication token provided",
+      authStatus: 'missing'
+    });
+  }
+
+  if (req.authStatus === 'expired') {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication token has expired. Please refresh your token.",
+      authStatus: 'expired',
+      requiresReauth: true
+    });
+  }
+
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid authentication token",
+      authStatus: 'invalid'
+    });
+  }
+
   const { uid, email, name, picture } = req.user;
   let user = await User.findOne({ firebaseUid: uid });
   if (!user) {
@@ -24,6 +52,7 @@ export const syncUserWithFirebase = asyncHandler(async (req: AuthRequest, res: R
   res.status(200).json({
     success: true,
     user,
+    authStatus: 'valid'
   });
 });
 
