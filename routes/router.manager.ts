@@ -7,6 +7,7 @@ import applicationRoute from "../routes/applicationRoute";
 import bookmarkRoute from "../routes/bookmarkRoute";
 import fileRoute from '../routes/fileRoute';
 import dashboardRoute from "../routes/dashboardRoute";
+import otpRoute from "../routes/otpRoute";
 
 
 
@@ -20,5 +21,6 @@ router.use('/v1/application', applicationRoute)
 router.use('/v1/bookmark', bookmarkRoute)
 router.use('/v1/file', fileRoute);
 router.use("/v1/dashboard", dashboardRoute);
+router.use('/v1/auth', otpRoute);
 
 export default router

@@ -19,7 +19,8 @@ const swaggerDocument: any = {
     { "name": "Bookmarks", "description": "Endpoints for managing user bookmarks" },
     { "name": "Interests", "description": "Endpoints for managing interests" },
     { "name": "Questions", "description": "Endpoints for managing questions" },
-    { "name": "Files", "description": "Endpoints for file management (e.g., uploads)" }
+    { "name": "Files", "description": "Endpoints for file management (e.g., uploads)" },
+    { "name": "OTP Authentication", "description": "Endpoints for OTP-based authentication" }
   ],
   "components": {
     "securitySchemes": {
@@ -294,6 +295,89 @@ const swaggerDocument: any = {
           "message": { "type": "string", "example": "Authentication token has expired. Please refresh your token." },
           "authStatus": { "type": "string", "enum": ["expired", "missing", "invalid"], "example": "expired" },
           "requiresReauth": { "type": "boolean", "example": true }
+        }
+      },
+      "OTPRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com",
+            "description": "Email address to send OTP to"
+          }
+        },
+        "required": ["email"]
+      },
+      "OTPVerificationRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com",
+            "description": "Email address that received the OTP"
+          },
+          "otp": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "example": "123456",
+            "description": "6-digit verification code"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John",
+            "description": "User's first name (required for account creation)"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe",
+            "description": "User's last name (optional)"
+          }
+        },
+        "required": ["email", "otp", "firstName"]
+      },
+      "OTPResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Verification code sent to your email. Please check your inbox." },
+          "email": { "type": "string", "format": "email", "example": "user@example.com" }
+        }
+      },
+      "OTPVerificationResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Account created successfully! Welcome to InternSync." },
+          "user": {
+            "type": "object",
+            "properties": {
+              "uid": { "type": "string", "example": "firebase-user-id" },
+              "email": { "type": "string", "format": "email", "example": "user@example.com" },
+              "firstName": { "type": "string", "example": "John" },
+              "lastName": { "type": "string", "example": "Doe" },
+              "isNewUser": { "type": "boolean", "example": true }
+            }
+          },
+          "customToken": { "type": "string", "example": "firebase-custom-token-for-frontend-auth" }
+        }
+      },
+      "OTPErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": {
+            "type": "string",
+            "enum": [
+              "Invalid verification code",
+              "Verification code has expired. Please request a new one.",
+              "An account with this email already exists",
+              "Too many failed attempts. Please request a new verification code.",
+              "Please wait at least 1 minute before requesting a new verification code"
+            ],
+            "example": "Invalid verification code"
+          }
         }
       }
     }
@@ -1195,6 +1279,72 @@ const swaggerDocument: any = {
           },
           "401": { "description": "Unauthorized.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
           "404": { "description": "Question not found with the given ID.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/v1/otp/send": {
+      "post": {
+        "tags": ["OTP Authentication"],
+        "summary": "Send OTP to user's email",
+        "description": "Sends a one-time password (OTP) to the user's email address.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OTPRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP sent successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OTPResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input, object invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/otp/verify": {
+      "post": {
+        "tags": ["OTP Authentication"],
+        "summary": "Verify OTP",
+        "description": "Verifies the OTP sent to the user's email address.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OTPVerificationRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP verified successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OTPVerificationResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input, object invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OTPErrorResponse" }
+              }
+            }
+          }
         }
       }
     }
