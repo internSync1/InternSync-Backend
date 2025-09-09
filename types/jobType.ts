@@ -44,4 +44,15 @@ export interface IJob extends Document {
         displayInApp: boolean;
         featured: boolean;
     };
+    // New fields for swipe functionality
+    relevancyScore?: number;
+    tags?: string[];
+    categories?: string[];
+    sourceUrl?: string;
+    source?: string;
+    prize?: string;
+    // Card variant and media
+    sourceType?: 'csv' | 'web';
+    bannerImageUrl?: string;
+    applyMode?: 'external' | 'native';
 }

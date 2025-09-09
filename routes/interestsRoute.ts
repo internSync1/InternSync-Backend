@@ -3,6 +3,7 @@ import {
   createInterest,
   deleteInterest,
   getInterest,
+  getBroadCategories
 } from "../controllers/interestsController";
 import { authorize } from "../common/middleware/auth";
 import { firebaseAuth } from "../common/middleware/firebaseAuth";
@@ -12,6 +13,7 @@ const router = express.Router();
 
 // Applicant routes
 router.get("/", firebaseAuth, (req, res, next) => getInterest(req as any, res, next));
+router.get("/categories", firebaseAuth, (req, res, next) => getBroadCategories(req as any, res, next));
 
 // Admin routes
 router.post("/", firebaseAuth, authorize([UserRole.ADMIN]), (req, res, next) => createInterest(req as any, res, next));

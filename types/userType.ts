@@ -17,6 +17,14 @@ export interface IUserDocument extends Document {
   email?: string;
   phoneNumber?: string;
   profilePicture?: string;
+  // Notifications
+  deviceTokens?: string[];
+  notificationPreferences?: {
+    pushEnabled: boolean;
+    emailEnabled: boolean;
+    jobRecommendations: boolean;
+    applicationUpdates: boolean;
+  };
   gender?: string;
   countryCode?: string;
   country?: string;
@@ -40,5 +48,3 @@ export interface IUserDocument extends Document {
   languages: string[];
   appreciation: string[];
 }
-
-

@@ -42,5 +42,7 @@ Thumbs.db
 # Uploaded files (if stored locally)
 uploads/
 
+# Data files
+opportunities (3).csv 
 # Misc
-coverage/ 
+coverage/

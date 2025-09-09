@@ -27,13 +27,28 @@
       "type": "string"
     },
     {
+      "key": "admin_firebase_token",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "test_email",
       "value": "test@example.com",
       "type": "string"
     },
     {
+      "key": "admin_email",
+      "value": "admin@internsync.com",
+      "type": "string"
+    },
+    {
       "key": "otp_code",
       "value": "123456",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
       "type": "string"
     }
   ],
@@ -864,6 +879,377 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Admin Management",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/users?page=1&limit=10&role=applicant",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of users per page"
+                },
+                {
+                  "key": "role",
+                  "value": "applicant",
+                  "description": "Filter by user role (admin, applicant)"
+                }
+              ]
+            },
+            "description": "Get all users with pagination and role filtering. Requires admin privileges."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_firebase_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/users?page=1&limit=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Users retrieved successfully\",\n  \"data\": {\n    \"users\": [\n      {\n        \"_id\": \"user123\",\n        \"firstName\": \"John\",\n        \"lastName\": \"Doe\",\n        \"email\": \"john@example.com\",\n        \"role\": \"applicant\",\n        \"isActive\": true,\n        \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n      }\n    ],\n    \"pagination\": {\n      \"page\": 1,\n      \"limit\": 10,\n      \"total\": 25,\n      \"pages\": 3\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get All Admin Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/admins",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "admins"
+              ]
+            },
+            "description": "Get all users with admin role. Requires admin privileges."
+          },
+          "response": []
+        },
+        {
+          "name": "Promote User to Admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_firebase_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/promote/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "promote",
+                "{{user_id}}"
+              ]
+            },
+            "description": "Promote an existing user to admin role. Requires admin privileges."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_firebase_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/promote/user123",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "promote",
+                    "user123"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"User promoted to admin successfully\",\n  \"data\": {\n    \"_id\": \"user123\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john@example.com\",\n    \"role\": \"admin\",\n    \"isActive\": true\n  }\n}"
+            },
+            {
+              "name": "User Already Admin",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_firebase_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/promote/user123",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "promote",
+                    "user123"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"User is already an admin\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Demote Admin to User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_firebase_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/demote/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "demote",
+                "{{user_id}}"
+              ]
+            },
+            "description": "Remove admin role from user (demote to applicant). Requires admin privileges."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_firebase_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/demote/user123",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "demote",
+                    "user123"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Admin role removed successfully\",\n  \"data\": {\n    \"_id\": \"user123\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john@example.com\",\n    \"role\": \"applicant\",\n    \"isActive\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Toggle User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_firebase_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/admin/toggle-status/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "admin",
+                "toggle-status",
+                "{{user_id}}"
+              ]
+            },
+            "description": "Toggle user active/inactive status. Requires admin privileges."
+          },
+          "response": [
+            {
+              "name": "User Activated",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_firebase_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/toggle-status/user123",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "toggle-status",
+                    "user123"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"User activated successfully\",\n  \"data\": {\n    \"_id\": \"user123\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john@example.com\",\n    \"role\": \"applicant\",\n    \"isActive\": true\n  }\n}"
+            },
+            {
+              "name": "User Deactivated",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_firebase_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/toggle-status/user123",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "toggle-status",
+                    "user123"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"User deactivated successfully\",\n  \"data\": {\n    \"_id\": \"user123\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john@example.com\",\n    \"role\": \"applicant\",\n    \"isActive\": false\n  }\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Admin user management endpoints for promoting/demoting users, managing user status, and viewing all users in the system.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{admin_firebase_token}}",
+            "type": "string"
+          }
+        ]
+      }
     }
   ]
 }

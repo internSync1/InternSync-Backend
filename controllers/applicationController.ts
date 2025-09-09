@@ -9,6 +9,9 @@ import { validateApplicationStatus } from "../utils/common";
 import { IPaginationRequest, IPaginationResponse, IPaginateOptions } from "../types/paginationType";
 import { paginate } from "../utils/pagination";
 import { IApplication } from "../types/applicationType";
+import User from "../models/userModel";
+import Notification from "../models/notificationModel";
+import pushService from "../services/pushService";
 
 export const createApplication = asyncHandler(async (req: ProtectedRequest, res: Response, next: NextFunction) => {
     const { jobId } = req.params;
@@ -39,6 +42,34 @@ export const createApplication = asyncHandler(async (req: ProtectedRequest, res:
         text,
         status: ApplicationStatus.PENDING,
     });
+
+    // Create in-app notification and push
+    try {
+        const user = userId ? await User.findById(userId) : await User.findOne({ firebaseUid: req.user.uid });
+        if (user) {
+            const notif = await Notification.create({
+                userId: user._id,
+                title: 'Application submitted',
+                body: `You applied to ${job.title} at ${job.company.name}.`,
+                type: 'application_submitted',
+                data: { jobId: String(job._id) }
+            });
+
+            const tokens = user.deviceTokens || [];
+            if (tokens.length) {
+                const { invalidTokens } = await pushService.sendToTokens(tokens, {
+                    title: notif.title,
+                    body: notif.body,
+                    data: { type: 'application_submitted', jobId: String(job._id) }
+                });
+                if (invalidTokens.length) {
+                    await User.updateOne({ _id: user._id }, { $pull: { deviceTokens: { $in: invalidTokens } } });
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to send submit notification:', e);
+    }
 
     res.status(201).json({ success: true, data: application });
 });
@@ -133,6 +164,37 @@ export const updateApplicationStatus = asyncHandler(async (req: Request, res: Re
 
     application.status = status as ApplicationStatus;
     await application.save({ validateBeforeSave: true });
+
+    // Notify applicant of status change
+    try {
+        const user = application.userId ? await User.findById(application.userId) : await User.findOne({ firebaseUid: (req as any).user?.uid });
+        const job = await Job.findById(application.jobId);
+        if (user && job) {
+            const title = 'Application update';
+            const body = `Your application for ${job.title} is now ${status}.`;
+            const notif = await Notification.create({
+                userId: user._id,
+                title,
+                body,
+                type: 'application_status',
+                data: { jobId: String(job._id), status }
+            });
+
+            const tokens = user.deviceTokens || [];
+            if (tokens.length) {
+                const { invalidTokens } = await pushService.sendToTokens(tokens, {
+                    title,
+                    body,
+                    data: { type: 'application_status', jobId: String(job._id), status: String(status) }
+                });
+                if (invalidTokens.length) {
+                    await User.updateOne({ _id: user._id }, { $pull: { deviceTokens: { $in: invalidTokens } } });
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to send status notification:', e);
+    }
 
     res.status(200).json({ success: true, message: "Application status updated successfully.", data: application });
 });
