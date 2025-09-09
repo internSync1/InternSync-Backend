@@ -20,7 +20,10 @@ const swaggerDocument: any = {
     { "name": "Interests", "description": "Endpoints for managing interests" },
     { "name": "Questions", "description": "Endpoints for managing questions" },
     { "name": "Files", "description": "Endpoints for file management (e.g., uploads)" },
-    { "name": "OTP Authentication", "description": "Endpoints for OTP-based authentication" }
+    { "name": "OTP Authentication", "description": "Endpoints for OTP-based authentication" },
+    { "name": "Notifications", "description": "Device registration and in-app notifications" },
+    { "name": "Content", "description": "Static content such as House Rules" },
+    { "name": "Swipe", "description": "Swipe-based job discovery" }
   ],
   "components": {
     "securitySchemes": {
@@ -101,10 +104,19 @@ const swaggerDocument: any = {
               "featured": { "type": "boolean", "example": false }
             }
           },
+          "relevancyScore": { "type": "number", "example": 10 },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "categories": { "type": "array", "items": { "type": "string" } },
+          "sourceUrl": { "type": "string", "example": "https://example.com/job" },
+          "source": { "type": "string", "example": "CSV Import" },
+          "prize": { "type": "string", "example": "$1000" },
+          "sourceType": { "type": "string", "enum": ["csv", "web"], "example": "csv" },
+          "bannerImageUrl": { "type": "string", "example": "https://example.com/banner.png" },
+          "applyMode": { "type": "string", "enum": ["external", "native"], "example": "external" },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" }
         },
-        "required": ["designation", "company", "description"]
+        "required": ["title", "company", "description"]
       },
       "JobRequest": {
         "type": "object",
@@ -292,9 +304,17 @@ const swaggerDocument: any = {
         "type": "object",
         "properties": {
           "success": { "type": "boolean", "example": false },
-          "message": { "type": "string", "example": "Authentication token has expired. Please refresh your token." },
-          "authStatus": { "type": "string", "enum": ["expired", "missing", "invalid"], "example": "expired" },
-          "requiresReauth": { "type": "boolean", "example": true }
+          "message": {
+            "type": "string",
+            "enum": [
+              "Invalid verification code",
+              "Verification code has expired. Please request a new one.",
+              "An account with this email already exists",
+              "Too many failed attempts. Please request a new verification code.",
+              "Please wait at least 1 minute before requesting a new verification code"
+            ],
+            "example": "Invalid verification code"
+          }
         }
       },
       "OTPRequest": {
@@ -650,7 +670,21 @@ const swaggerDocument: any = {
             "schema": { "type": "integer", "default": 10, "minimum": 1 },
             "required": false,
             "description": "Number of items per pageNo."
-          }
+          },
+          { "in": "query", "name": "status", "schema": { "type": "string" } },
+          { "in": "query", "name": "startDate", "schema": { "type": "string", "format": "date" } },
+          { "in": "query", "name": "endDate", "schema": { "type": "string", "format": "date" } },
+          { "in": "query", "name": "sortBy", "schema": { "type": "string", "enum": ["appsReceived_asc", "appsReceived_desc", "relevance_desc", "deadline_asc", "deadline_desc"] } },
+          { "in": "query", "name": "categories", "schema": { "type": "string" }, "description": "Comma-separated categories" },
+          { "in": "query", "name": "tags", "schema": { "type": "string" }, "description": "Comma-separated tags" },
+          { "in": "query", "name": "sourceType", "schema": { "type": "string", "enum": ["csv", "web"] } },
+          { "in": "query", "name": "isRemote", "schema": { "type": "boolean" } },
+          { "in": "query", "name": "jobType", "schema": { "type": "string" }, "description": "internship | activity | extracurricular | etc" },
+          { "in": "query", "name": "stipendMin", "schema": { "type": "number" } },
+          { "in": "query", "name": "stipendMax", "schema": { "type": "number" } },
+          { "in": "query", "name": "deadlineBefore", "schema": { "type": "string", "format": "date" } },
+          { "in": "query", "name": "deadlineAfter", "schema": { "type": "string", "format": "date" } },
+          { "in": "query", "name": "featured", "schema": { "type": "boolean" } }
         ],
         "responses": {
           "200": {
@@ -1347,6 +1381,58 @@ const swaggerDocument: any = {
           }
         }
       }
+    },
+    "/v1/swipe/next": {
+      "get": {
+        "tags": ["Swipe"],
+        "summary": "Get next job for swiping (CSV-only by default)",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "in": "query", "name": "type", "schema": { "type": "string", "enum": ["internships", "activities", "extracurriculars"] }, "description": "Tab filter" }
+        ],
+        "responses": { "200": { "description": "Next job or null" } }
+      }
+    },
+    "/v1/swipe/action": {
+      "post": {
+        "tags": ["Swipe"],
+        "summary": "Submit a swipe action",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "properties": { "jobId": { "type": "string" }, "action": { "type": "string", "enum": ["like", "dislike", "superlike", "skip"] } }, "required": ["jobId", "action"] } } }
+        },
+        "responses": { "200": { "description": "Action recorded" } }
+      }
+    },
+    "/v1/swipe/history": { "get": { "tags": ["Swipe"], "summary": "Get swipe history", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "History list" } } } },
+    "/v1/swipe/liked": { "get": { "tags": ["Swipe"], "summary": "Get liked jobs", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Liked list" } } } },
+    "/v1/swipe/stats": { "get": { "tags": ["Swipe"], "summary": "Get swipe stats", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Stats" } } } },
+    "/v1/notifications/register-device": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Register FCM device token",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" } }, "required": ["token"] } } } },
+        "responses": { "200": { "description": "Registered" } }
+      }
+    },
+    "/v1/notifications/unregister-device": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Unregister FCM device token",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" } }, "required": ["token"] } } } },
+        "responses": { "200": { "description": "Unregistered" } }
+      }
+    },
+    "/v1/notifications": { "get": { "tags": ["Notifications"], "summary": "List notifications", "security": [{ "BearerAuth": [] }], "parameters": [{ "in": "query", "name": "unreadOnly", "schema": { "type": "boolean" } }, { "in": "query", "name": "pageNo", "schema": { "type": "integer", "default": 1 } }, { "in": "query", "name": "offset", "schema": { "type": "integer", "default": 20 } }], "responses": { "200": { "description": "List" } } } },
+    "/v1/notifications/{id}/read": { "patch": { "tags": ["Notifications"], "summary": "Mark single notification as read", "security": [{ "BearerAuth": [] }], "parameters": [{ "in": "path", "name": "id", "schema": { "type": "string" }, "required": true }], "responses": { "200": { "description": "Marked" } } } },
+    "/v1/notifications/read-all": { "patch": { "tags": ["Notifications"], "summary": "Mark all as read", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "All marked" } } } },
+    "/v1/notifications/test": { "post": { "tags": ["Notifications"], "summary": "Send test notification", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Test sent" } } } },
+    "/v1/content/house-rules": {
+      "get": { "tags": ["Content"], "summary": "Get House Rules", "responses": { "200": { "description": "Current house rules" } } },
+      "put": { "tags": ["Content"], "summary": "Update House Rules (Admin)", "security": [{ "BearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "title": { "type": "string" }, "body": { "type": "string" }, "published": { "type": "boolean" } } } } } }, "responses": { "200": { "description": "Updated" } } }
     }
   }
 };

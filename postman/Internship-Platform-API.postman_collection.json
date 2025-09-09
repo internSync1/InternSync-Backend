@@ -50,6 +50,21 @@
       "key": "user_id",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "job_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notification_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "device_token",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -1250,6 +1265,325 @@
           }
         ]
       }
+    },
+    {
+      "name": "Swipe",
+      "item": [
+        {
+          "name": "Get Next",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/swipe/next?type=internships",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "swipe",
+                "next"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "internships",
+                  "description": "internships | activities | extracurriculars"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Swipe Action",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jobId\": \"{{job_id}}\",\n  \"action\": \"like\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/swipe/action",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "swipe",
+                "action"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Swipe History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/swipe/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "swipe",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Liked Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/swipe/liked",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "swipe",
+                "liked"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Swipe Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/swipe/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "swipe",
+                "stats"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Register Device",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{device_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/notifications/register-device",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "notifications",
+                "register-device"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Unregister Device",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{device_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/notifications/unregister-device",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "notifications",
+                "unregister-device"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/notifications?unreadOnly=true&pageNo=1&offset=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "unreadOnly",
+                  "value": "true"
+                },
+                {
+                  "key": "pageNo",
+                  "value": "1"
+                },
+                {
+                  "key": "offset",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Single Read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/notifications/{{notification_id}}/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "notifications",
+                "{{notification_id}}",
+                "read"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/notifications/read-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "notifications",
+                "read-all"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Test",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/notifications/test",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "notifications",
+                "test"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Content",
+      "item": [
+        {
+          "name": "Get House Rules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/content/house-rules",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "content",
+                "house-rules"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update House Rules (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"House Rules\",\n  \"body\": \"...\",\n  \"published\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/content/house-rules",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "content",
+                "house-rules"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }
