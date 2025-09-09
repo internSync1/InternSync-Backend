@@ -44,5 +44,7 @@ uploads/
 
 # Data files
 opportunities (3).csv 
+*.csv
+
 # Misc
 coverage/
