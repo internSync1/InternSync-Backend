@@ -1316,11 +1316,10 @@ const swaggerDocument: any = {
         }
       }
     },
-    "/v1/otp/send": {
+    "/v1/auth/signup/send-otp": {
       "post": {
         "tags": ["OTP Authentication"],
-        "summary": "Send OTP to user's email",
-        "description": "Sends a one-time password (OTP) to the user's email address.",
+        "summary": "Send verification OTP for signup",
         "requestBody": {
           "required": true,
           "content": {
@@ -1330,30 +1329,17 @@ const swaggerDocument: any = {
           }
         },
         "responses": {
-          "200": {
-            "description": "OTP sent successfully.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/OTPResponse" }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input, object invalid.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
+          "200": { "description": "Verification code sent", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPResponse" } } } },
+          "400": { "description": "Invalid email format", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
+          "409": { "description": "Account already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
+          "500": { "description": "Failed to send verification email", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
         }
       }
     },
-    "/v1/otp/verify": {
+    "/v1/auth/signup/verify-otp": {
       "post": {
         "tags": ["OTP Authentication"],
-        "summary": "Verify OTP",
-        "description": "Verifies the OTP sent to the user's email address.",
+        "summary": "Verify OTP and create/authenticate user",
         "requestBody": {
           "required": true,
           "content": {
@@ -1363,22 +1349,29 @@ const swaggerDocument: any = {
           }
         },
         "responses": {
-          "200": {
-            "description": "OTP verified successfully.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/OTPVerificationResponse" }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input, object invalid.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/OTPErrorResponse" }
-              }
+          "201": { "description": "Account created / user authenticated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPVerificationResponse" } } } },
+          "400": { "description": "Invalid or expired OTP", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
+          "409": { "description": "Account already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
+          "429": { "description": "Too many failed attempts", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } }
+        }
+      }
+    },
+    "/v1/auth/signup/resend-otp": {
+      "post": {
+        "tags": ["OTP Authentication"],
+        "summary": "Resend verification OTP for signup",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OTPRequest" }
             }
           }
+        },
+        "responses": {
+          "200": { "description": "New verification code sent", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPResponse" } } } },
+          "409": { "description": "Account already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
+          "429": { "description": "Rate limit exceeded", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } }
         }
       }
     },
