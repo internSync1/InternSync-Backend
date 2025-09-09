@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Interest from "../models/interestsModel";
 import asyncHandler from "../common/middleware/async";
+import { broadCategories } from "../constant/broadCategories";
 
 export const createInterest = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -29,5 +30,11 @@ export const getInterest = asyncHandler(
             success: true,
             data: interests,
         });
+    }
+);
+
+export const getBroadCategories = asyncHandler(
+    async (req: Request, res: Response) => {
+        res.status(200).json({ success: true, data: broadCategories });
     }
 );

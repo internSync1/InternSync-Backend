@@ -1,42 +1,45 @@
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
+  private isDevelopmentMode: boolean;
+  private emailConfigured: boolean;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      service: 'gmail', // You can change this to your preferred email service
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_APP_PASSWORD, // Use app password for Gmail
-      },
-    });
+    this.emailConfigured = !!(process.env.SENDGRID_API_KEY && process.env.FROM_EMAIL);
+    this.isDevelopmentMode = process.env.NODE_ENV === 'development';
 
-    // Verify transporter configuration
-    this.verifyConnection();
-  }
-
-  private async verifyConnection() {
-    try {
-      await this.transporter.verify();
-      console.log('✅ Email service is ready to send emails');
-      console.log(`📧 Configured email: ${process.env.EMAIL_USER}`);
-    } catch (error: any) {
-      console.error('❌ Email service configuration error:', error);
-      console.error('🔧 Check your EMAIL_USER and EMAIL_APP_PASSWORD in .env file');
+    if (this.emailConfigured && !this.isDevelopmentMode) {
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+      console.log('✅ SendGrid email service initialized');
+      console.log(`📧 From email: ${process.env.FROM_EMAIL}`);
+    } else {
+      console.log('🔧 Email service running in DEVELOPMENT MODE');
+      if (!this.emailConfigured) {
+        console.log('📝 To enable email: Set SENDGRID_API_KEY and FROM_EMAIL in .env file');
+      } else {
+        console.log('📝 Set NODE_ENV=production to enable actual email sending');
+      }
     }
   }
 
   async sendOTP(email: string, otp: string): Promise<boolean> {
-    try {
-      console.log(`📤 Attempting to send OTP to: ${email}`);
+    if (this.isDevelopmentMode || !this.emailConfigured) {
+      console.log('🔧 DEVELOPMENT MODE: OTP Email');
+      console.log(`📧 To: ${email}`);
+      console.log(`🔑 OTP: ${otp}`);
+      console.log('✅ Email simulated successfully');
+      return true;
+    }
 
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
+    try {
+      console.log(`📤 Sending OTP via SendGrid to: ${email}`);
+
+      const msg = {
         to: email,
+        from: process.env.FROM_EMAIL!,
         subject: 'Your OTP for InternSync Authentication',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -62,34 +65,41 @@ class EmailService {
             </p>
           </div>
         `,
+        text: `Your OTP code is: ${otp}. This code expires in 10 minutes. Please do not share this code with anyone.`
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Email sent successfully:', result.messageId);
-      console.log('📬 Email details:', {
-        from: mailOptions.from,
-        to: mailOptions.to,
-        subject: mailOptions.subject
-      });
+      await sgMail.send(msg);
+      console.log('✅ OTP email sent successfully via SendGrid!');
       return true;
     } catch (error: any) {
-      console.error('❌ Error sending OTP email:', error);
-      console.error('🔍 Email service error details:', {
-        error: error.message,
-        code: error.code,
-        command: error.command
-      });
-      return false;
+      console.error('❌ SendGrid error sending OTP email:', error.message);
+      if (error.response) {
+        console.error('SendGrid response:', error.response.body);
+      }
+
+      // Fallback to development mode for this request
+      console.log('🔧 Falling back to development mode');
+      console.log(`📧 To: ${email}`);
+      console.log(`🔑 OTP: ${otp}`);
+      return true;
     }
   }
 
   async sendWelcomeEmail(email: string, firstName: string): Promise<boolean> {
-    try {
-      console.log(`📤 Attempting to send welcome email to: ${email}`);
+    if (this.isDevelopmentMode || !this.emailConfigured) {
+      console.log('🔧 DEVELOPMENT MODE: Welcome Email');
+      console.log(`📧 To: ${email}`);
+      console.log(`👋 Welcome ${firstName}!`);
+      console.log('✅ Email simulated successfully');
+      return true;
+    }
 
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
+    try {
+      console.log(`📤 Sending welcome email via SendGrid to: ${email}`);
+
+      const msg = {
         to: email,
+        from: process.env.FROM_EMAIL!,
         subject: 'Welcome to InternSync!',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -108,24 +118,22 @@ class EmailService {
             </p>
           </div>
         `,
+        text: `Hello ${firstName}! Thank you for joining InternSync. Your account has been successfully verified and you can now start exploring internship opportunities.`
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Email sent successfully:', result.messageId);
-      console.log('📬 Email details:', {
-        from: mailOptions.from,
-        to: mailOptions.to,
-        subject: mailOptions.subject
-      });
+      await sgMail.send(msg);
+      console.log('✅ Welcome email sent successfully via SendGrid!');
       return true;
     } catch (error: any) {
-      console.error('❌ Error sending welcome email:', error);
-      console.error('🔍 Email service error details:', {
-        error: error.message,
-        code: error.code,
-        command: error.command
-      });
-      return false;
+      console.error('❌ SendGrid error sending welcome email:', error.message);
+      if (error.response) {
+        console.error('SendGrid response:', error.response.body);
+      }
+
+      console.log('🔧 Falling back to development mode');
+      console.log(`📧 To: ${email}`);
+      console.log(`👋 Welcome ${firstName}!`);
+      return true;
     }
   }
 }

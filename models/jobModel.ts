@@ -50,7 +50,24 @@ const jobSchema = new Schema<IJob>({
     weeklyHours: Number,
     isRemote: Boolean,
     visibility: { type: VisibilitySchema, required: true },
+    // New fields for swipe functionality
+    relevancyScore: { type: Number, default: 0 },
+    tags: [{ type: String }],
+    categories: [{ type: String }],
+    sourceUrl: String,
+    source: String,
+    prize: String,
+    // New fields for card variant and media
+    sourceType: { type: String, enum: ['csv', 'web'], default: 'web' },
+    bannerImageUrl: String,
+    applyMode: { type: String, enum: ['external', 'native'], default: 'external' },
 }, { timestamps: true, autoIndex: true, minimize: false, versionKey: false });
+
+// Helpful indexes for search/filtering
+jobSchema.index({ tags: 1 });
+jobSchema.index({ categories: 1 });
+jobSchema.index({ sourceType: 1 });
+jobSchema.index({ jobType: 1 });
 
 jobSchema.pre('findOneAndUpdate', function (): void {
     this.set({

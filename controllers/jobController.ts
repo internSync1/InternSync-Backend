@@ -7,6 +7,7 @@ import { IJob } from "../types/jobType";
 import { IPaginationResponse, IPaginationRequest, IPaginateOptions } from "../types/paginationType";
 import { paginate } from "../utils/pagination";
 import Application from "../models/applicationModel";
+
 export const getAllJobs = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const {
@@ -16,8 +17,33 @@ export const getAllJobs = asyncHandler(
             status,
             startDate,
             endDate,
-            sortBy
-        }: IPaginationRequest & { status?: string, startDate?: string, endDate?: string, sortBy?: string } = req.query;
+            sortBy,
+            categories,
+            tags,
+            sourceType,
+            isRemote,
+            jobType,
+            stipendMin,
+            stipendMax,
+            deadlineBefore,
+            deadlineAfter,
+            featured
+        }: IPaginationRequest & {
+            status?: string;
+            startDate?: string;
+            endDate?: string;
+            sortBy?: string;
+            categories?: string;
+            tags?: string;
+            sourceType?: 'csv' | 'web' | string;
+            isRemote?: string;
+            jobType?: string;
+            stipendMin?: string | number;
+            stipendMax?: string | number;
+            deadlineBefore?: string;
+            deadlineAfter?: string;
+            featured?: string;
+        } = req.query;
 
         const page = Number(pageNo);
         const skip = (page - 1) * Number(limit);
@@ -38,7 +64,7 @@ export const getAllJobs = asyncHandler(
             const labelRegex = new RegExp(labelsPattern, "i");
 
             filterQuery.$or = [
-                { designation: regex },
+                { title: regex },
                 { "company.name": regex },
                 { "description.details": regex },
                 { location: regex },
@@ -54,13 +80,61 @@ export const getAllJobs = asyncHandler(
             filterQuery.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
         }
 
+        // Advanced filters
+        if (categories) {
+            const arr = String(categories).split(',').map((s) => s.trim()).filter(Boolean);
+            if (arr.length) filterQuery.categories = { $in: arr };
+        }
+
+        if (tags) {
+            const arr = String(tags).split(',').map((s) => s.trim()).filter(Boolean);
+            if (arr.length) filterQuery.tags = { $in: arr };
+        }
+
+        if (sourceType) {
+            filterQuery.sourceType = String(sourceType).toLowerCase();
+        }
+
+        if (typeof isRemote !== 'undefined') {
+            const val = String(isRemote).toLowerCase();
+            if (['true', 'false'].includes(val)) filterQuery.isRemote = val === 'true';
+        }
+
+        if (jobType) {
+            filterQuery.jobType = jobType;
+        }
+
+        if (deadlineBefore || deadlineAfter) {
+            filterQuery.applicationDeadline = {} as any;
+            if (deadlineAfter) (filterQuery.applicationDeadline as any).$gte = new Date(String(deadlineAfter));
+            if (deadlineBefore) (filterQuery.applicationDeadline as any).$lte = new Date(String(deadlineBefore));
+        }
+
+        if (typeof featured !== 'undefined') {
+            const val = String(featured).toLowerCase();
+            if (['true', 'false'].includes(val)) filterQuery['visibility.featured'] = val === 'true';
+        }
+
+        if (stipendMin || stipendMax) {
+            filterQuery['description.stipend.amount'] = {} as any;
+            if (stipendMin) (filterQuery['description.stipend.amount'] as any).$gte = Number(stipendMin);
+            if (stipendMax) (filterQuery['description.stipend.amount'] as any).$lte = Number(stipendMax);
+        }
+
         const sortQuery: any = {};
-        if (sortBy === 'appsReceived_asc') {
-            sortQuery.appsReceived = 1;
-        } else if (sortBy === 'appsReceived_desc') {
-            sortQuery.appsReceived = -1;
-        } else {
-            sortQuery.createdAt = -1;
+        switch (sortBy) {
+            case 'appsReceived_asc':
+                sortQuery.appsReceived = 1; break;
+            case 'appsReceived_desc':
+                sortQuery.appsReceived = -1; break;
+            case 'relevance_desc':
+                sortQuery.relevancyScore = -1; sortQuery.createdAt = -1; break;
+            case 'deadline_asc':
+                sortQuery.applicationDeadline = 1; break;
+            case 'deadline_desc':
+                sortQuery.applicationDeadline = -1; break;
+            default:
+                sortQuery.createdAt = -1;
         }
 
         const jobs = await Job.aggregate([
@@ -108,7 +182,6 @@ export const getAllJobs = asyncHandler(
     }
 );
 
-
 export const getJobById = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const jobId = req.params.id;
@@ -129,6 +202,9 @@ export const getJobById = asyncHandler(
 export const createJob = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const jobRequest = req.body;
+        // Ensure defaults for origin and application mode
+        if (!jobRequest.sourceType) jobRequest.sourceType = 'web';
+        if (!jobRequest.applyMode) jobRequest.applyMode = 'native';
         const job = new Job(jobRequest);
         await job.save();
         res.status(201).json({
