@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -6,29 +6,19 @@ dotenv.config();
 class EmailService {
   private isDevelopmentMode: boolean;
   private emailConfigured: boolean;
-  private transporter: nodemailer.Transporter | null = null;
 
   constructor() {
-    this.emailConfigured = !!(process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD);
+    this.emailConfigured = !!(process.env.SENDGRID_API_KEY && process.env.FROM_EMAIL);
     this.isDevelopmentMode = process.env.NODE_ENV === 'development';
 
     if (this.emailConfigured && !this.isDevelopmentMode) {
-      this.transporter = nodemailer.createTransport({
-        service: 'gmail',
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_APP_PASSWORD,
-        },
-      });
-      console.log('✅ Gmail SMTP email service initialized');
-      console.log(`📧 From email: ${process.env.EMAIL_USER}`);
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+      console.log('✅ SendGrid email service initialized');
+      console.log(`📧 From email: ${process.env.FROM_EMAIL}`);
     } else {
       console.log('🔧 Email service running in DEVELOPMENT MODE');
       if (!this.emailConfigured) {
-        console.log('📝 To enable email: Set EMAIL_USER and EMAIL_APP_PASSWORD in .env file');
+        console.log('📝 To enable email: Set SENDGRID_API_KEY and FROM_EMAIL in .env file');
       } else {
         console.log('📝 Set NODE_ENV=production to enable actual email sending');
       }
@@ -44,17 +34,12 @@ class EmailService {
       return true;
     }
 
-    if (!this.transporter) {
-      console.error('❌ Email transporter not initialized');
-      return false;
-    }
-
     try {
-      console.log(`📤 Sending OTP via Gmail SMTP to: ${email}`);
+      console.log(`📤 Sending OTP via SendGrid to: ${email}`);
 
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
+      const msg = {
         to: email,
+        from: process.env.FROM_EMAIL!,
         subject: 'Your OTP for InternSync Authentication',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -83,11 +68,14 @@ class EmailService {
         text: `Your OTP code is: ${otp}. This code expires in 10 minutes. Please do not share this code with anyone.`
       };
 
-      await this.transporter.sendMail(mailOptions);
-      console.log('✅ OTP email sent successfully via Gmail SMTP!');
+      await sgMail.send(msg);
+      console.log('✅ OTP email sent successfully via SendGrid!');
       return true;
     } catch (error: any) {
-      console.error('❌ Gmail SMTP error sending OTP email:', error.message);
+      console.error('❌ SendGrid error sending OTP email:', error.message);
+      if (error.response) {
+        console.error('SendGrid response:', error.response.body);
+      }
 
       // Fallback to development mode for this request
       console.log('🔧 Falling back to development mode');
@@ -107,17 +95,12 @@ class EmailService {
       return true;
     }
 
-    if (!this.transporter) {
-      console.error('❌ Email transporter not initialized');
-      return false;
-    }
-
     try {
-      console.log(`📤 Sending welcome email via Gmail SMTP to: ${email}`);
+      console.log(`📤 Sending welcome email via SendGrid to: ${email}`);
 
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
+      const msg = {
         to: email,
+        from: process.env.FROM_EMAIL!,
         subject: 'Welcome to InternSync!',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -139,11 +122,14 @@ class EmailService {
         text: `Hello ${name}! Thank you for joining InternSync. Your account has been successfully verified and you can now start exploring internship opportunities.`
       };
 
-      await this.transporter.sendMail(mailOptions);
-      console.log('✅ Welcome email sent successfully via Gmail SMTP!');
+      await sgMail.send(msg);
+      console.log('✅ Welcome email sent successfully via SendGrid!');
       return true;
     } catch (error: any) {
-      console.error('❌ Gmail SMTP error sending welcome email:', error.message);
+      console.error('❌ SendGrid error sending welcome email:', error.message);
+      if (error.response) {
+        console.error('SendGrid response:', error.response.body);
+      }
 
       console.log('🔧 Falling back to development mode');
       console.log(`📧 To: ${email}`);
