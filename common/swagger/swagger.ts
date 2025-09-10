@@ -343,19 +343,9 @@ const swaggerDocument: any = {
             "pattern": "^[0-9]{6}$",
             "example": "123456",
             "description": "6-digit verification code"
-          },
-          "firstName": {
-            "type": "string",
-            "example": "John",
-            "description": "User's first name (required for account creation)"
-          },
-          "lastName": {
-            "type": "string",
-            "example": "Doe",
-            "description": "User's last name (optional)"
           }
         },
-        "required": ["email", "otp", "firstName"]
+        "required": ["email", "otp"]
       },
       "OTPResponse": {
         "type": "object",

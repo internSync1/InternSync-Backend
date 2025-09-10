@@ -10,8 +10,6 @@ interface OtpRequest extends Request {
     body: {
         email: string;
         otp?: string;
-        firstName?: string;
-        lastName?: string;
     };
 }
 
@@ -89,19 +87,12 @@ export const sendSignupOTP = asyncHandler(async (req: OtpRequest, res: Response)
 
 // Verify OTP and create new user account
 export const verifySignupOTP = asyncHandler(async (req: OtpRequest, res: Response) => {
-    const { email, otp, firstName, lastName } = req.body;
+    const { email, otp } = req.body;
 
     if (!email || !otp) {
         return res.status(400).json({
             success: false,
             message: 'Email and verification code are required',
-        });
-    }
-
-    if (!firstName) {
-        return res.status(400).json({
-            success: false,
-            message: 'First name is required for account creation',
         });
     }
 
@@ -175,20 +166,17 @@ export const verifySignupOTP = asyncHandler(async (req: OtpRequest, res: Respons
         const firebaseUser = await admin.auth().createUser({
             email: email.toLowerCase(),
             emailVerified: true,
-            displayName: `${firstName} ${lastName || ''}`.trim(),
         });
 
         // Create user in database
         const user = await User.create({
             firebaseUid: firebaseUser.uid,
             email: email.toLowerCase(),
-            firstName: firstName,
-            lastName: lastName || '',
             isActive: true,
         });
 
         // Send welcome email
-        await emailService.sendWelcomeEmail(email, firstName);
+        await emailService.sendWelcomeEmail(email);
 
         // Generate custom token for Firebase authentication
         const customToken = await admin.auth().createCustomToken(user.firebaseUid);
@@ -202,8 +190,6 @@ export const verifySignupOTP = asyncHandler(async (req: OtpRequest, res: Respons
             user: {
                 uid: user.firebaseUid,
                 email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
                 isNewUser: true,
             },
             customToken,

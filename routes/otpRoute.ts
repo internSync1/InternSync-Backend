@@ -50,7 +50,6 @@ router.post('/signup/send-otp', validateOtpRequest, sendSignupOTP);
  *             required:
  *               - email
  *               - otp
- *               - firstName
  *             properties:
  *               email:
  *                 type: string
@@ -59,12 +58,6 @@ router.post('/signup/send-otp', validateOtpRequest, sendSignupOTP);
  *               otp:
  *                 type: string
  *                 example: "123456"
- *               firstName:
- *                 type: string
- *                 example: "John"
- *               lastName:
- *                 type: string
- *                 example: "Doe"
  *     responses:
  *       201:
  *         description: Account created successfully
