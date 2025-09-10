@@ -11,27 +11,19 @@ class EmailService {
     this.emailConfigured = !!(process.env.SENDGRID_API_KEY && process.env.FROM_EMAIL);
     this.isDevelopmentMode = process.env.NODE_ENV === 'development';
 
-    if (this.emailConfigured && !this.isDevelopmentMode) {
+    if (this.emailConfigured) {
       sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
-      console.log('✅ SendGrid email service initialized');
+      console.log(`✅ SendGrid email service initialized (mode: ${this.isDevelopmentMode ? 'development' : 'production'})`);
       console.log(`📧 From email: ${process.env.FROM_EMAIL}`);
     } else {
-      console.log('🔧 Email service running in DEVELOPMENT MODE');
-      if (!this.emailConfigured) {
-        console.log('📝 To enable email: Set SENDGRID_API_KEY and FROM_EMAIL in .env file');
-      } else {
-        console.log('📝 Set NODE_ENV=production to enable actual email sending');
-      }
+      console.warn('⚠️ Email service NOT configured. Set SENDGRID_API_KEY and FROM_EMAIL in .env file');
     }
   }
 
   async sendOTP(email: string, otp: string): Promise<boolean> {
-    if (this.isDevelopmentMode || !this.emailConfigured) {
-      console.log('🔧 DEVELOPMENT MODE: OTP Email');
-      console.log(`📧 To: ${email}`);
-      console.log(`🔑 OTP: ${otp}`);
-      console.log('✅ Email simulated successfully');
-      return true;
+    if (!this.emailConfigured) {
+      console.error('❌ Cannot send OTP: Email service not configured (missing SENDGRID_API_KEY or FROM_EMAIL)');
+      return false;
     }
 
     try {
@@ -66,33 +58,26 @@ class EmailService {
           </div>
         `,
         text: `Your OTP code is: ${otp}. This code expires in 10 minutes. Please do not share this code with anyone.`
-      };
+      } as const;
 
-      await sgMail.send(msg);
-      console.log('✅ OTP email sent successfully via SendGrid!');
+      const [response] = await sgMail.send(msg);
+      console.log(`✅ OTP email sent via SendGrid with status ${response.statusCode}`);
       return true;
     } catch (error: any) {
-      console.error('❌ SendGrid error sending OTP email:', error.message);
-      if (error.response) {
-        console.error('SendGrid response:', error.response.body);
+      console.error('❌ SendGrid error sending OTP email:', error?.message || error);
+      if (error?.response?.body) {
+        console.error('SendGrid response body:', JSON.stringify(error.response.body));
       }
-
-      // Fallback to development mode for this request
-      console.log('🔧 Falling back to development mode');
-      console.log(`📧 To: ${email}`);
-      console.log(`🔑 OTP: ${otp}`);
-      return true;
+      return false;
     }
   }
 
   async sendWelcomeEmail(email: string, firstName?: string): Promise<boolean> {
     const name = firstName || 'there';
-    if (this.isDevelopmentMode || !this.emailConfigured) {
-      console.log('🔧 DEVELOPMENT MODE: Welcome Email');
-      console.log(`📧 To: ${email}`);
-      console.log(`👋 Welcome ${name}!`);
-      console.log('✅ Email simulated successfully');
-      return true;
+
+    if (!this.emailConfigured) {
+      console.error('❌ Cannot send Welcome email: Email service not configured (missing SENDGRID_API_KEY or FROM_EMAIL)');
+      return false;
     }
 
     try {
@@ -120,21 +105,17 @@ class EmailService {
           </div>
         `,
         text: `Hello ${name}! Thank you for joining InternSync. Your account has been successfully verified and you can now start exploring internship opportunities.`
-      };
+      } as const;
 
-      await sgMail.send(msg);
-      console.log('✅ Welcome email sent successfully via SendGrid!');
+      const [response] = await sgMail.send(msg);
+      console.log(`✅ Welcome email sent via SendGrid with status ${response.statusCode}`);
       return true;
     } catch (error: any) {
-      console.error('❌ SendGrid error sending welcome email:', error.message);
-      if (error.response) {
-        console.error('SendGrid response:', error.response.body);
+      console.error('❌ SendGrid error sending welcome email:', error?.message || error);
+      if (error?.response?.body) {
+        console.error('SendGrid response body:', JSON.stringify(error.response.body));
       }
-
-      console.log('🔧 Falling back to development mode');
-      console.log(`📧 To: ${email}`);
-      console.log(`👋 Welcome ${name}!`);
-      return true;
+      return false;
     }
   }
 }
