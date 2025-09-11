@@ -5,7 +5,7 @@ import User from '../../models/userModel';
 // Extend Express Request type to include user
 interface AuthenticatedRequest extends Request {
   user?: any;
-  authStatus?: 'valid' | 'expired' | 'missing';
+  authStatus?: 'valid' | 'expired' | 'missing' | 'unverified';
 }
 
 export const firebaseAuth: RequestHandler = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -19,19 +19,17 @@ export const firebaseAuth: RequestHandler = (req: AuthenticatedRequest, res: Res
     .then(async (decodedToken) => {
       req.user = decodedToken;
       try {
-        const { uid, email, name, picture } = decodedToken as any;
-        let user = await User.findOne({ firebaseUid: uid });
+        const { uid } = decodedToken as any;
+        // Only find existing user, don't create new ones
+        const user = await User.findOne({ firebaseUid: uid });
         if (!user) {
-          await User.create({
-            firebaseUid: uid,
-            email,
-            firstName: name || '',
-            profilePicture: picture || '',
-            isActive: true,
+          return res.status(403).json({
+            message: 'User not found. Please complete OTP verification first.',
+            requiresVerification: true
           });
         }
       } catch (e) {
-        return res.status(500).json({ message: 'Failed to ensure user', error: e instanceof Error ? e.message : e });
+        return res.status(500).json({ message: 'Failed to verify user', error: e instanceof Error ? e.message : e });
       }
       next();
     })
@@ -57,19 +55,14 @@ export const lazyFirebaseAuth: RequestHandler = (req: AuthenticatedRequest, res:
       req.authStatus = 'valid';
 
       try {
-        const { uid, email, name, picture } = decodedToken as any;
-        let user = await User.findOne({ firebaseUid: uid });
+        const { uid } = decodedToken as any;
+        // Only find existing user, don't create new ones
+        const user = await User.findOne({ firebaseUid: uid });
         if (!user) {
-          await User.create({
-            firebaseUid: uid,
-            email,
-            firstName: name || '',
-            profilePicture: picture || '',
-            isActive: true,
-          });
+          req.authStatus = 'unverified';
         }
       } catch (e) {
-        console.error('Failed to ensure user in lazy auth:', e);
+        console.error('Failed to check user in lazy auth:', e);
       }
 
       next();

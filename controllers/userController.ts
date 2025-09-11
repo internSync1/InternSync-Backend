@@ -41,18 +41,17 @@ export const syncUserWithFirebase = asyncHandler(async (req: AuthRequest, res: R
   const { uid, email, name, picture } = req.user;
   let user = await User.findOne({ firebaseUid: uid });
   if (!user) {
-    user = await User.create({
-      firebaseUid: uid,
-      email,
-      firstName: name || '',
-      profilePicture: picture || '',
-      isActive: true,
+    return res.status(403).json({
+      success: false,
+      message: "User not found. Please complete OTP verification first.",
+      requiresVerification: true,
+      authStatus: 'unverified'
     });
   }
   res.status(200).json({
     success: true,
     user,
-    authStatus: 'valid'
+    authStatus: req.authStatus || 'valid'
   });
 });
 
