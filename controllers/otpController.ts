@@ -204,6 +204,7 @@ export const verifySignupOTP = asyncHandler(async (req: OtpRequest, res: Respons
                 email: user.email,
                 isNewUser: true,
             },
+            requiresPasswordSetup: true,
             customToken,
         });
     } catch (error: any) {

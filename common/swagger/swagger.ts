@@ -365,10 +365,13 @@ const swaggerDocument: any = {
             "properties": {
               "uid": { "type": "string", "example": "firebase-user-id" },
               "email": { "type": "string", "format": "email", "example": "user@example.com" },
-              "firstName": { "type": "string", "example": "John" },
-              "lastName": { "type": "string", "example": "Doe" },
               "isNewUser": { "type": "boolean", "example": true }
             }
+          },
+          "requiresPasswordSetup": {
+            "type": "boolean",
+            "example": true,
+            "description": "If true, the client should prompt the user to create a password using the Firebase client SDK (updatePassword) after signing in with the returned customToken."
           },
           "customToken": { "type": "string", "example": "firebase-custom-token-for-frontend-auth" }
         }
@@ -675,749 +678,749 @@ const swaggerDocument: any = {
           { "in": "query", "name": "deadlineBefore", "schema": { "type": "string", "format": "date" } },
           { "in": "query", "name": "deadlineAfter", "schema": { "type": "string", "format": "date" } },
           { "in": "query", "name": "featured", "schema": { "type": "boolean" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of jobs.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "pageNo": { "type": "integer", "example": 1 },
-                    "offset": { "type": "integer", "example": 10 },
-                    "totalItems": { "type": "integer", "example": 50 },
-                    "totalPages": { "type": "integer", "example": 5 },
-                    "nextPage": { "type": "integer", "example": 2, "nullable": true },
-                    "data": {
-                      "type": "array",
-                      "items": { "$ref": "#/components/schemas/Job" }
-                    }
+        ]
+      },
+      "responses": {
+        "200": {
+          "description": "A list of jobs.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "success": { "type": "boolean", "example": true },
+                  "pageNo": { "type": "integer", "example": 1 },
+                  "offset": { "type": "integer", "example": 10 },
+                  "totalItems": { "type": "integer", "example": 50 },
+                  "totalPages": { "type": "integer", "example": 5 },
+                  "nextPage": { "type": "integer", "example": 2, "nullable": true },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Job" }
                   }
                 }
               }
             }
-          },
-          "400": {
-            "description": "Invalid status value.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
+          }
+        },
+        "400": {
+          "description": "Invalid status value.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
             }
+          }
+        }
+      }
+    },
+    "post": {
+      "tags": ["Jobs"],
+      "summary": "Create a new job (Admin)",
+      "description": "Adds a new job to the platform. Requires admin privileges.",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": {
+        "description": "Job object that needs to be added.",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/JobRequest" }
           }
         }
       },
-      "post": {
-        "tags": ["Jobs"],
-        "summary": "Create a new job (Admin)",
-        "description": "Adds a new job to the platform. Requires admin privileges.",
-        "security": [{ "BearerAuth": [] }],
-        "requestBody": {
-          "description": "Job object that needs to be added.",
-          "required": true,
+      "responses": {
+        "201": {
+          "description": "Job created successfully.",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/JobRequest" }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Job created successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "data": { "$ref": "#/components/schemas/Job" }
-                  }
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "success": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Job" }
                 }
               }
             }
-          },
-          "400": {
-            "description": "Invalid input, object invalid.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
           }
-        }
-      }
-    },
-    "/v1/job/{id}": {
-      "get": {
-        "tags": ["Jobs"],
-        "summary": "Get job by ID",
-        "description": "Retrieves a specific job by its ID.",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the job to retrieve.",
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Job retrieved successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "data": { "$ref": "#/components/schemas/Job" }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Job not found.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": ["Jobs"],
-        "summary": "Update job by ID (Admin)",
-        "description": "Updates a specific job by its ID. Requires admin privileges.",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the job to update.",
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-            }
-          }
-        ],
-        "requestBody": {
-          "description": "Job object that needs to be updated.",
-          "required": true,
+        },
+        "400": {
+          "description": "Invalid input, object invalid.",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/JobRequest" }
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "Job updated successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "data": { "$ref": "#/components/schemas/Job" }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input, object invalid.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "404": {
-            "description": "Job not found.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["Jobs"],
-        "summary": "Delete job by ID (Admin)",
-        "description": "Deletes a specific job by its ID. Requires admin privileges.",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the job to delete.",
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Job deleted successfully.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessConfirmationResponse" }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "404": {
-            "description": "Job not found.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/application": {
-      "post": {
-        "tags": ["Applications"],
-        "summary": "Create a new application",
-        "description": "Submits a new job application. Requires authentication.",
-        "security": [{ "BearerAuth": [] }],
-        "requestBody": {
-          "description": "Application object that needs to be submitted.",
-          "required": true,
+        "401": {
+          "description": "Unauthorized.",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/ApplicationRequest" }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Application submitted successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "data": { "$ref": "#/components/schemas/Application" }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input, object invalid.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": ["Applications"],
-        "summary": "Get user's applications",
-        "description": "Retrieves a list of applications submitted by the authenticated user.",
-        "security": [{ "BearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "Applications retrieved successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Application" } }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
             }
           }
         }
       }
-    },
-    "/v1/application/{id}": {
-      "get": {
-        "tags": ["Applications"],
-        "summary": "Get application by ID",
-        "description": "Retrieves a specific application by its ID.",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the application to retrieve.",
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Application retrieved successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "data": { "$ref": "#/components/schemas/Application" }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "404": {
-            "description": "Application not found.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/bookmark/{jobId}": {
-      "post": {
-        "tags": ["Bookmarks"],
-        "summary": "Bookmark a job",
-        "description": "Adds a job to the user's bookmarks. Requires authentication.",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "jobId",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the job to bookmark.",
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Job bookmarked successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "data": { "$ref": "#/components/schemas/Bookmark" }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Job already bookmarked or invalid job ID.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["Bookmarks"],
-        "summary": "Remove bookmark",
-        "description": "Removes a job from the user's bookmarks. Requires authentication.",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "jobId",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the job to remove from bookmarks.",
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Bookmark removed successfully.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessConfirmationResponse" }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "404": {
-            "description": "Bookmark not found.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/bookmark/user": {
-      "get": {
-        "tags": ["Bookmarks"],
-        "summary": "Get user's bookmarked jobs",
-        "description": "Retrieves a list of all jobs bookmarked by the currently authenticated user (Applicant), with job details populated.",
-        "security": [{ "BearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved user's bookmarks.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "count": { "type": "integer", "example": 1 },
-                    "data": {
-                      "type": "array",
-                      "items": { "$ref": "#/components/schemas/BookmarkWithPopulatedJob" }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": { "description": "Unauthorized. User needs to be logged in.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
-        }
-      }
-    },
-    "/v1/interests": {
-      "post": {
-        "tags": ["Interests"],
-        "summary": "Create a new interest (Admin)",
-        "description": "Adds a new interest to the system. Admin privileges are typically required for this operation.",
-        "security": [{ "BearerAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/InterestInput" }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Interest created successfully.",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InterestResponse" } } }
-          },
-          "400": { "description": "Invalid input provided.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
-          "401": { "description": "Unauthorized.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
-        }
-      },
-      "get": {
-        "tags": ["Interests"],
-        "summary": "Get all active interests",
-        "description": "Retrieves a list of all interests marked as active. Publicly accessible or requires basic authentication.",
-        "security": [{ "BearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "A list of active interests.",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InterestsResponse" } } }
-          },
-          "500": { "description": "Internal server error.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
-        }
-      }
-    },
-    "/v1/interests/{id}": {
-      "delete": {
-        "tags": ["Interests"],
-        "summary": "Delete an interest by ID (Admin)",
-        "description": "Deletes a specific interest using its unique ID. Admin privileges are typically required for this operation.",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the interest to delete.",
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "example": "d290f1ee-6c54-4b01-90e6-d701748f0855"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Interest deleted successfully.",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessConfirmationResponse" } } }
-          },
-          "401": { "description": "Unauthorized.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
-          "404": { "description": "Interest not found with the given ID.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
-        }
-      }
-    },
-    "/v1/questions": {
-      "post": {
-        "tags": ["Questions"],
-        "summary": "Create a new question (Admin)",
-        "description": "Adds a new question to the system. Admin privileges are typically required for this operation.",
-        "security": [{ "BearerAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/QuestionInput" }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Question created successfully.",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QuestionResponse" } } }
-          },
-          "400": { "description": "Invalid input provided.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
-          "401": { "description": "Unauthorized.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
-        }
-      },
-      "get": {
-        "tags": ["Questions"],
-        "summary": "Get all active questions",
-        "description": "Retrieves a list of all questions marked as active. Publicly accessible or requires basic authentication.",
-        "security": [{ "BearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "A list of active questions.",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QuestionsResponse" } } }
-          },
-          "500": { "description": "Internal server error.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
-        }
-      }
-    },
-    "/v1/questions/{id}": {
-      "delete": {
-        "tags": ["Questions"],
-        "summary": "Delete a question by ID (Admin)",
-        "description": "Deletes a specific question using its unique ID. Admin privileges are typically required for this operation.",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the question to delete.",
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "example": "d290f1ee-6c54-4b01-90e6-d701748f0856"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Question deleted successfully.",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessConfirmationResponse" } } }
-          },
-          "401": { "description": "Unauthorized.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
-          "404": { "description": "Question not found with the given ID.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
-        }
-      }
-    },
-    "/v1/auth/signup/send-otp": {
-      "post": {
-        "tags": ["OTP Authentication"],
-        "summary": "Send verification OTP for signup",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/OTPRequest" }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Verification code sent", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPResponse" } } } },
-          "400": { "description": "Invalid email format", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
-          "409": { "description": "Account already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
-          "500": { "description": "Failed to send verification email", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
-        }
-      }
-    },
-    "/v1/auth/signup/verify-otp": {
-      "post": {
-        "tags": ["OTP Authentication"],
-        "summary": "Verify OTP and create/authenticate user",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/OTPVerificationRequest" }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "Account created / user authenticated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPVerificationResponse" } } } },
-          "400": { "description": "Invalid or expired OTP", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
-          "409": { "description": "Account already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
-          "429": { "description": "Too many failed attempts", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } }
-        }
-      }
-    },
-    "/v1/auth/signup/resend-otp": {
-      "post": {
-        "tags": ["OTP Authentication"],
-        "summary": "Resend verification OTP for signup",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/OTPRequest" }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "New verification code sent", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPResponse" } } } },
-          "409": { "description": "Account already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
-          "429": { "description": "Rate limit exceeded", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } }
-        }
-      }
-    },
-    "/v1/swipe/next": {
-      "get": {
-        "tags": ["Swipe"],
-        "summary": "Get next job for swiping (CSV-only by default)",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          { "in": "query", "name": "type", "schema": { "type": "string", "enum": ["internships", "activities", "extracurriculars"] }, "description": "Tab filter" }
-        ],
-        "responses": { "200": { "description": "Next job or null" } }
-      }
-    },
-    "/v1/swipe/action": {
-      "post": {
-        "tags": ["Swipe"],
-        "summary": "Submit a swipe action",
-        "security": [{ "BearerAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "type": "object", "properties": { "jobId": { "type": "string" }, "action": { "type": "string", "enum": ["like", "dislike", "superlike", "skip"] } }, "required": ["jobId", "action"] } } }
-        },
-        "responses": { "200": { "description": "Action recorded" } }
-      }
-    },
-    "/v1/swipe/history": { "get": { "tags": ["Swipe"], "summary": "Get swipe history", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "History list" } } } },
-    "/v1/swipe/liked": { "get": { "tags": ["Swipe"], "summary": "Get liked jobs", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Liked list" } } } },
-    "/v1/swipe/stats": { "get": { "tags": ["Swipe"], "summary": "Get swipe stats", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Stats" } } } },
-    "/v1/notifications/register-device": {
-      "post": {
-        "tags": ["Notifications"],
-        "summary": "Register FCM device token",
-        "security": [{ "BearerAuth": [] }],
-        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" } }, "required": ["token"] } } } },
-        "responses": { "200": { "description": "Registered" } }
-      }
-    },
-    "/v1/notifications/unregister-device": {
-      "post": {
-        "tags": ["Notifications"],
-        "summary": "Unregister FCM device token",
-        "security": [{ "BearerAuth": [] }],
-        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" } }, "required": ["token"] } } } },
-        "responses": { "200": { "description": "Unregistered" } }
-      }
-    },
-    "/v1/notifications": { "get": { "tags": ["Notifications"], "summary": "List notifications", "security": [{ "BearerAuth": [] }], "parameters": [{ "in": "query", "name": "unreadOnly", "schema": { "type": "boolean" } }, { "in": "query", "name": "pageNo", "schema": { "type": "integer", "default": 1 } }, { "in": "query", "name": "offset", "schema": { "type": "integer", "default": 20 } }], "responses": { "200": { "description": "List" } } } },
-    "/v1/notifications/{id}/read": { "patch": { "tags": ["Notifications"], "summary": "Mark single notification as read", "security": [{ "BearerAuth": [] }], "parameters": [{ "in": "path", "name": "id", "schema": { "type": "string" }, "required": true }], "responses": { "200": { "description": "Marked" } } } },
-    "/v1/notifications/read-all": { "patch": { "tags": ["Notifications"], "summary": "Mark all as read", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "All marked" } } } },
-    "/v1/notifications/test": { "post": { "tags": ["Notifications"], "summary": "Send test notification", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Test sent" } } } },
-    "/v1/content/house-rules": {
-      "get": { "tags": ["Content"], "summary": "Get House Rules", "responses": { "200": { "description": "Current house rules" } } },
-      "put": { "tags": ["Content"], "summary": "Update House Rules (Admin)", "security": [{ "BearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "title": { "type": "string" }, "body": { "type": "string" }, "published": { "type": "boolean" } } } } } }, "responses": { "200": { "description": "Updated" } } }
     }
+  },
+  "/v1/job/{id}": {
+    "get": {
+      "tags": ["Jobs"],
+      "summary": "Get job by ID",
+      "description": "Retrieves a specific job by its ID.",
+      "security": [{ "BearerAuth": [] }],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the job to retrieve.",
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Job retrieved successfully.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "success": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Job" }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Job not found.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "put": {
+      "tags": ["Jobs"],
+      "summary": "Update job by ID (Admin)",
+      "description": "Updates a specific job by its ID. Requires admin privileges.",
+      "security": [{ "BearerAuth": [] }],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the job to update.",
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          }
+        }
+      ],
+      "requestBody": {
+        "description": "Job object that needs to be updated.",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/JobRequest" }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Job updated successfully.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "success": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Job" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Invalid input, object invalid.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Job not found.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "tags": ["Jobs"],
+      "summary": "Delete job by ID (Admin)",
+      "description": "Deletes a specific job by its ID. Requires admin privileges.",
+      "security": [{ "BearerAuth": [] }],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the job to delete.",
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Job deleted successfully.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SuccessConfirmationResponse" }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Job not found.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/v1/application": {
+    "post": {
+      "tags": ["Applications"],
+      "summary": "Create a new application",
+      "description": "Submits a new job application. Requires authentication.",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": {
+        "description": "Application object that needs to be submitted.",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApplicationRequest" }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Application submitted successfully.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "success": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Application" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Invalid input, object invalid.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "get": {
+      "tags": ["Applications"],
+      "summary": "Get user's applications",
+      "description": "Retrieves a list of applications submitted by the authenticated user.",
+      "security": [{ "BearerAuth": [] }],
+      "responses": {
+        "200": {
+          "description": "Applications retrieved successfully.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "success": { "type": "boolean", "example": true },
+                  "data": { "type": "array", "items": { "$ref": "#/components/schemas/Application" } }
+                }
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/v1/application/{id}": {
+    "get": {
+      "tags": ["Applications"],
+      "summary": "Get application by ID",
+      "description": "Retrieves a specific application by its ID.",
+      "security": [{ "BearerAuth": [] }],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the application to retrieve.",
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Application retrieved successfully.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "success": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Application" }
+                }
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Application not found.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/v1/bookmark/{jobId}": {
+    "post": {
+      "tags": ["Bookmarks"],
+      "summary": "Bookmark a job",
+      "description": "Adds a job to the user's bookmarks. Requires authentication.",
+      "security": [{ "BearerAuth": [] }],
+      "parameters": [
+        {
+          "name": "jobId",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the job to bookmark.",
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          }
+        }
+      ],
+      "responses": {
+        "201": {
+          "description": "Job bookmarked successfully.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "success": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Bookmark" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Job already bookmarked or invalid job ID.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "tags": ["Bookmarks"],
+      "summary": "Remove bookmark",
+      "description": "Removes a job from the user's bookmarks. Requires authentication.",
+      "security": [{ "BearerAuth": [] }],
+      "parameters": [
+        {
+          "name": "jobId",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the job to remove from bookmarks.",
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Bookmark removed successfully.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SuccessConfirmationResponse" }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Bookmark not found.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/v1/bookmark/user": {
+    "get": {
+      "tags": ["Bookmarks"],
+      "summary": "Get user's bookmarked jobs",
+      "description": "Retrieves a list of all jobs bookmarked by the currently authenticated user (Applicant), with job details populated.",
+      "security": [{ "BearerAuth": [] }],
+      "responses": {
+        "200": {
+          "description": "Successfully retrieved user's bookmarks.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "success": { "type": "boolean", "example": true },
+                  "count": { "type": "integer", "example": 1 },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/BookmarkWithPopulatedJob" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "401": { "description": "Unauthorized. User needs to be logged in.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+      }
+    }
+  },
+  "/v1/interests": {
+    "post": {
+      "tags": ["Interests"],
+      "summary": "Create a new interest (Admin)",
+      "description": "Adds a new interest to the system. Admin privileges are typically required for this operation.",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/InterestInput" }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Interest created successfully.",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InterestResponse" } } }
+        },
+        "400": { "description": "Invalid input provided.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+        "401": { "description": "Unauthorized.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+      }
+    },
+    "get": {
+      "tags": ["Interests"],
+      "summary": "Get all active interests",
+      "description": "Retrieves a list of all interests marked as active. Publicly accessible or requires basic authentication.",
+      "security": [{ "BearerAuth": [] }],
+      "responses": {
+        "200": {
+          "description": "A list of active interests.",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InterestsResponse" } } }
+        },
+        "500": { "description": "Internal server error.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+      }
+    }
+  },
+  "/v1/interests/{id}": {
+    "delete": {
+      "tags": ["Interests"],
+      "summary": "Delete an interest by ID (Admin)",
+      "description": "Deletes a specific interest using its unique ID. Admin privileges are typically required for this operation.",
+      "security": [{ "BearerAuth": [] }],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the interest to delete.",
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0855"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Interest deleted successfully.",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessConfirmationResponse" } } }
+        },
+        "401": { "description": "Unauthorized.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+        "404": { "description": "Interest not found with the given ID.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+      }
+    }
+  },
+  "/v1/questions": {
+    "post": {
+      "tags": ["Questions"],
+      "summary": "Create a new question (Admin)",
+      "description": "Adds a new question to the system. Admin privileges are typically required for this operation.",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/QuestionInput" }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Question created successfully.",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QuestionResponse" } } }
+        },
+        "400": { "description": "Invalid input provided.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+        "401": { "description": "Unauthorized.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+      }
+    },
+    "get": {
+      "tags": ["Questions"],
+      "summary": "Get all active questions",
+      "description": "Retrieves a list of all questions marked as active. Publicly accessible or requires basic authentication.",
+      "security": [{ "BearerAuth": [] }],
+      "responses": {
+        "200": {
+          "description": "A list of active questions.",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QuestionsResponse" } } }
+        },
+        "500": { "description": "Internal server error.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+      }
+    }
+  },
+  "/v1/questions/{id}": {
+    "delete": {
+      "tags": ["Questions"],
+      "summary": "Delete a question by ID (Admin)",
+      "description": "Deletes a specific question using its unique ID. Admin privileges are typically required for this operation.",
+      "security": [{ "BearerAuth": [] }],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the question to delete.",
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0856"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Question deleted successfully.",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessConfirmationResponse" } } }
+        },
+        "401": { "description": "Unauthorized.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+        "404": { "description": "Question not found with the given ID.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+      }
+    }
+  },
+  "/v1/auth/signup/send-otp": {
+    "post": {
+      "tags": ["OTP Authentication"],
+      "summary": "Send verification OTP for signup",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/OTPRequest" }
+          }
+        }
+      },
+      "responses": {
+        "200": { "description": "Verification code sent", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPResponse" } } } },
+        "400": { "description": "Invalid email format", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
+        "409": { "description": "Account already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
+        "500": { "description": "Failed to send verification email", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+      }
+    }
+  },
+  "/v1/auth/signup/verify-otp": {
+    "post": {
+      "tags": ["OTP Authentication"],
+      "summary": "Verify OTP and create/authenticate user",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/OTPVerificationRequest" }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "Account created / user authenticated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPVerificationResponse" } } } },
+        "400": { "description": "Invalid or expired OTP", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
+        "409": { "description": "Account already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
+        "429": { "description": "Too many failed attempts", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } }
+      }
+    }
+  },
+  "/v1/auth/signup/resend-otp": {
+    "post": {
+      "tags": ["OTP Authentication"],
+      "summary": "Resend verification OTP for signup",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/OTPRequest" }
+          }
+        }
+      },
+      "responses": {
+        "200": { "description": "New verification code sent", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPResponse" } } } },
+        "409": { "description": "Account already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
+        "429": { "description": "Rate limit exceeded", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } }
+      }
+    }
+  },
+  "/v1/swipe/next": {
+    "get": {
+      "tags": ["Swipe"],
+      "summary": "Get next job for swiping (CSV-only by default)",
+      "security": [{ "BearerAuth": [] }],
+      "parameters": [
+        { "in": "query", "name": "type", "schema": { "type": "string", "enum": ["internships", "activities", "extracurriculars"] }, "description": "Tab filter" }
+      ],
+      "responses": { "200": { "description": "Next job or null" } }
+    }
+  },
+  "/v1/swipe/action": {
+    "post": {
+      "tags": ["Swipe"],
+      "summary": "Submit a swipe action",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": { "application/json": { "schema": { "type": "object", "properties": { "jobId": { "type": "string" }, "action": { "type": "string", "enum": ["like", "dislike", "superlike", "skip"] } }, "required": ["jobId", "action"] } } }
+      },
+      "responses": { "200": { "description": "Action recorded" } }
+    }
+  },
+  "/v1/swipe/history": { "get": { "tags": ["Swipe"], "summary": "Get swipe history", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "History list" } } } },
+  "/v1/swipe/liked": { "get": { "tags": ["Swipe"], "summary": "Get liked jobs", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Liked list" } } } },
+  "/v1/swipe/stats": { "get": { "tags": ["Swipe"], "summary": "Get swipe stats", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Stats" } } } },
+  "/v1/notifications/register-device": {
+    "post": {
+      "tags": ["Notifications"],
+      "summary": "Register FCM device token",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" } }, "required": ["token"] } } } },
+      "responses": { "200": { "description": "Registered" } }
+    }
+  },
+  "/v1/notifications/unregister-device": {
+    "post": {
+      "tags": ["Notifications"],
+      "summary": "Unregister FCM device token",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" } }, "required": ["token"] } } } },
+      "responses": { "200": { "description": "Unregistered" } }
+    }
+  },
+  "/v1/notifications": { "get": { "tags": ["Notifications"], "summary": "List notifications", "security": [{ "BearerAuth": [] }], "parameters": [{ "in": "query", "name": "unreadOnly", "schema": { "type": "boolean" } }, { "in": "query", "name": "pageNo", "schema": { "type": "integer", "default": 1 } }, { "in": "query", "name": "offset", "schema": { "type": "integer", "default": 20 } }], "responses": { "200": { "description": "List" } } } },
+  "/v1/notifications/{id}/read": { "patch": { "tags": ["Notifications"], "summary": "Mark single notification as read", "security": [{ "BearerAuth": [] }], "parameters": [{ "in": "path", "name": "id", "schema": { "type": "string" }, "required": true }], "responses": { "200": { "description": "Marked" } } } },
+  "/v1/notifications/read-all": { "patch": { "tags": ["Notifications"], "summary": "Mark all as read", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "All marked" } } } },
+  "/v1/notifications/test": { "post": { "tags": ["Notifications"], "summary": "Send test notification", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Test sent" } } } },
+  "/v1/content/house-rules": {
+    "get": { "tags": ["Content"], "summary": "Get House Rules", "responses": { "200": { "description": "Current house rules" } } },
+    "put": { "tags": ["Content"], "summary": "Update House Rules (Admin)", "security": [{ "BearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "title": { "type": "string" }, "body": { "type": "string" }, "published": { "type": "boolean" } } } } } }, "responses": { "200": { "description": "Updated" } } }
   }
-};
+}
 
 export default swaggerDocument;
