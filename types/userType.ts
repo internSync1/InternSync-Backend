@@ -15,6 +15,8 @@ export interface IUserDocument extends Document {
   firstName: string;
   lastName?: string;
   email?: string;
+  password?: string;
+  hasPassword: boolean;
   phoneNumber?: string;
   profilePicture?: string;
   // Notifications
@@ -47,4 +49,5 @@ export interface IUserDocument extends Document {
   skills: string[];
   languages: string[];
   appreciation: string[];
+  comparePassword(candidatePassword: string): Promise<boolean>;
 }

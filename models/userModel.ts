@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { IUserDocument, WorkExperience } from "../types/userType";
 import { UserRole } from "../constant/userRoles";
+import bcrypt from "bcryptjs";
 
 const WorkExperienceSchema = new Schema<WorkExperience>({
   jobTitle: String,
@@ -32,6 +33,14 @@ const UserSchema = new Schema<IUserDocument>(
       match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
       unique: true,
       sparse: true,
+    },
+    password: {
+      type: String,
+      select: false, // Don't include password in queries by default
+    },
+    hasPassword: {
+      type: Boolean,
+      default: false,
     },
     phoneNumber: {
       type: String,
@@ -82,6 +91,23 @@ const UserSchema = new Schema<IUserDocument>(
   },
   { timestamps: true, versionKey: false }
 );
+
+// Hash password before saving
+UserSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
+  if (this.password) {
+    this.password = await bcrypt.hash(this.password, 12);
+    this.hasPassword = true;
+  }
+  next();
+});
+
+// Method to compare password
+UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+  if (!this.password) return false;
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 const User = mongoose.model<IUserDocument>("User", UserSchema);
 export default User;

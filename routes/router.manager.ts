@@ -8,6 +8,7 @@ import bookmarkRoute from "../routes/bookmarkRoute";
 import fileRoute from '../routes/fileRoute';
 import dashboardRoute from "../routes/dashboardRoute";
 import otpRoute from "../routes/otpRoute";
+import authRoute from "../routes/authRoute";
 import adminRoute from "../routes/adminRoute";
 import swipeRoute from "../routes/swipeRoute";
 import notificationsRoute from "../routes/notificationsRoute";
@@ -26,6 +27,7 @@ router.use('/v1/bookmark', bookmarkRoute)
 router.use('/v1/file', fileRoute);
 router.use("/v1/dashboard", dashboardRoute);
 router.use('/v1/auth', otpRoute);
+router.use('/v1/auth', authRoute);
 router.use('/v1/admin', adminRoute);
 router.use('/v1/swipe', swipeRoute);
 router.use('/v1/notifications', notificationsRoute);
