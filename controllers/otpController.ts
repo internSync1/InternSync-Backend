@@ -162,11 +162,23 @@ export const verifySignupOTP = asyncHandler(async (req: OtpRequest, res: Respons
             { isUsed: true }
         );
 
-        // Create Firebase user
-        const firebaseUser = await admin.auth().createUser({
-            email: email.toLowerCase(),
-            emailVerified: true,
-        });
+        let firebaseUser;
+        try {
+            // Try to get existing Firebase user first
+            firebaseUser = await admin.auth().getUserByEmail(email.toLowerCase());
+            console.log('Firebase user already exists, using existing user');
+        } catch (error: any) {
+            if (error.code === 'auth/user-not-found') {
+                // User doesn't exist in Firebase, create new one
+                firebaseUser = await admin.auth().createUser({
+                    email: email.toLowerCase(),
+                    emailVerified: true,
+                });
+                console.log('Created new Firebase user');
+            } else {
+                throw error; // Re-throw other Firebase errors
+            }
+        }
 
         // Create user in database
         const user = await User.create({
@@ -196,14 +208,6 @@ export const verifySignupOTP = asyncHandler(async (req: OtpRequest, res: Respons
         });
     } catch (error: any) {
         console.error('Error verifying signup OTP:', error);
-
-        // Handle duplicate email error from Firebase
-        if (error.code === 'auth/email-already-exists') {
-            return res.status(409).json({
-                success: false,
-                message: 'An account with this email already exists',
-            });
-        }
 
         res.status(500).json({
             success: false,
