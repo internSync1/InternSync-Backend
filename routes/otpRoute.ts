@@ -1,5 +1,5 @@
 import express from 'express';
-import { sendSignupOTP, verifySignupOTP, resendSignupOTP } from '../controllers/otpController';
+import { sendSignupOTP, verifySignupOTP, resendSignupOTP, finalizeSignup } from '../controllers/otpController';
 import { validateOtpRequest, validateOtpVerification } from '../common/middleware/validation';
 
 const router = express.Router();
@@ -98,6 +98,44 @@ router.post('/signup/verify-otp', validateOtpVerification, verifySignupOTP);
  *         description: Rate limit exceeded
  */
 router.post('/signup/resend-otp', validateOtpRequest, resendSignupOTP);
+
+/**
+ * @swagger
+ * /api/auth/signup/finalize:
+ *   post:
+ *     summary: Finalize signup by creating backend user after Firebase account is created
+ *     description: Requires Firebase ID token in Authorization header. Verifies token and creates user record linked to provided uid and email.
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - uid
+ *               - email
+ *             properties:
+ *               uid:
+ *                 type: string
+ *                 example: firebase-uid-123
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *     responses:
+ *       201:
+ *         description: Account finalized successfully
+ *       400:
+ *         description: Missing/invalid input or OTP not verified
+ *       401:
+ *         description: Invalid or missing token
+ *       409:
+ *         description: User already exists
+ */
+router.post('/signup/finalize', finalizeSignup);
 
 // Legacy routes for backward compatibility
 router.post('/send-otp', validateOtpRequest, sendSignupOTP);

@@ -355,6 +355,36 @@ const swaggerDocument: any = {
           "email": { "type": "string", "format": "email", "example": "user@example.com" }
         }
       },
+      "OTPVerifyOnlyResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Email verified successfully. You can now create your Firebase account with password." },
+          "email": { "type": "string", "format": "email", "example": "user@example.com" }
+        }
+      },
+      "FinalizeSignupRequest": {
+        "type": "object",
+        "properties": {
+          "uid": { "type": "string", "example": "firebase-uid-123" },
+          "email": { "type": "string", "format": "email", "example": "user@example.com" }
+        },
+        "required": ["uid", "email"]
+      },
+      "FinalizeSignupResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Account finalized successfully" },
+          "user": {
+            "type": "object",
+            "properties": {
+              "uid": { "type": "string", "example": "firebase-uid-123" },
+              "email": { "type": "string", "format": "email", "example": "user@example.com" }
+            }
+          }
+        }
+      },
       "OTPVerificationResponse": {
         "type": "object",
         "properties": {
@@ -679,34 +709,35 @@ const swaggerDocument: any = {
           { "in": "query", "name": "deadlineAfter", "schema": { "type": "string", "format": "date" } },
           { "in": "query", "name": "featured", "schema": { "type": "boolean" } }
         ],
-      "responses": {
-        "200": {
-          "description": "A list of jobs.",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "success": { "type": "boolean", "example": true },
-                  "pageNo": { "type": "integer", "example": 1 },
-                  "offset": { "type": "integer", "example": 10 },
-                  "totalItems": { "type": "integer", "example": 50 },
-                  "totalPages": { "type": "integer", "example": 5 },
-                  "nextPage": { "type": "integer", "example": 2, "nullable": true },
-                  "data": {
-                    "type": "array",
-                    "items": { "$ref": "#/components/schemas/Job" }
+        "responses": {
+          "200": {
+            "description": "A list of jobs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "pageNo": { "type": "integer", "example": 1 },
+                    "offset": { "type": "integer", "example": 10 },
+                    "totalItems": { "type": "integer", "example": 50 },
+                    "totalPages": { "type": "integer", "example": 5 },
+                    "nextPage": { "type": "integer", "example": 2, "nullable": true },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Job" }
+                    }
                   }
                 }
               }
             }
-          }
-        },
-        "400": {
-          "description": "Invalid status value.",
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          },
+          "400": {
+            "description": "Invalid status value.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
             }
           }
         }
@@ -1332,7 +1363,7 @@ const swaggerDocument: any = {
   "/v1/auth/signup/verify-otp": {
     "post": {
       "tags": ["OTP Authentication"],
-      "summary": "Verify OTP and create/authenticate user",
+      "summary": "Verify OTP for signup",
       "requestBody": {
         "required": true,
         "content": {
@@ -1342,7 +1373,7 @@ const swaggerDocument: any = {
         }
       },
       "responses": {
-        "201": { "description": "Account created / user authenticated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPVerificationResponse" } } } },
+        "200": { "description": "Email verified successfully", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPVerifyOnlyResponse" } } } },
         "400": { "description": "Invalid or expired OTP", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
         "409": { "description": "Account already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
         "429": { "description": "Too many failed attempts", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } }
@@ -1365,6 +1396,28 @@ const swaggerDocument: any = {
         "200": { "description": "New verification code sent", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPResponse" } } } },
         "409": { "description": "Account already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
         "429": { "description": "Rate limit exceeded", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } }
+      }
+    }
+  },
+  "/v1/auth/signup/finalize": {
+    "post": {
+      "tags": ["OTP Authentication"],
+      "summary": "Finalize signup by creating backend user after Firebase account is created",
+      "description": "Requires Firebase ID token in Authorization header. Verifies token and creates user record linked to provided uid and email.",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/FinalizeSignupRequest" }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "Account finalized successfully", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FinalizeSignupResponse" } } } },
+        "400": { "description": "Missing/invalid input or OTP not verified", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OTPErrorResponse" } } } },
+        "401": { "description": "Invalid or missing token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+        "409": { "description": "User already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
       }
     }
   },
@@ -1420,7 +1473,7 @@ const swaggerDocument: any = {
     "get": { "tags": ["Content"], "summary": "Get House Rules", "responses": { "200": { "description": "Current house rules" } } },
     "put": { "tags": ["Content"], "summary": "Update House Rules (Admin)", "security": [{ "BearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "title": { "type": "string" }, "body": { "type": "string" }, "published": { "type": "boolean" } } } } } }, "responses": { "200": { "description": "Updated" } } }
   }
-  }
+
 };
 
 export default swaggerDocument;

@@ -85,7 +85,7 @@ export const sendSignupOTP = asyncHandler(async (req: OtpRequest, res: Response)
     }
 });
 
-// Verify OTP and create new user account
+// Verify OTP and prepare for account creation
 export const verifySignupOTP = asyncHandler(async (req: OtpRequest, res: Response) => {
     const { email, otp } = req.body;
 
@@ -156,56 +156,20 @@ export const verifySignupOTP = asyncHandler(async (req: OtpRequest, res: Respons
             });
         }
 
-        // Mark OTP as used
+        // Mark OTP as used and extend expiry slightly to allow finalize step
         await Otp.updateOne(
             { _id: otpRecord._id },
-            { isUsed: true }
+            { $set: { isUsed: true, expiresAt: new Date(Date.now() + 10 * 60 * 1000) } }
         );
 
-        let firebaseUser;
-        try {
-            // Try to get existing Firebase user first
-            firebaseUser = await admin.auth().getUserByEmail(email.toLowerCase());
-            console.log('Firebase user already exists, using existing user');
-        } catch (error: any) {
-            if (error.code === 'auth/user-not-found') {
-                // User doesn't exist in Firebase, create new one
-                firebaseUser = await admin.auth().createUser({
-                    email: email.toLowerCase(),
-                    emailVerified: true,
-                });
-                console.log('Created new Firebase user');
-            } else {
-                throw error; // Re-throw other Firebase errors
-            }
-        }
+        // Do NOT create Firebase user or DB user here.
+        // Frontend will now call Firebase createUserWithEmailAndPassword(email, password),
+        // then call our finalize endpoint with the Firebase ID token to create the DB user.
 
-        // Create user in database
-        const user = await User.create({
-            firebaseUid: firebaseUser.uid,
-            email: email.toLowerCase(),
-            isActive: true,
-        });
-
-        // Send welcome email
-        await emailService.sendWelcomeEmail(email);
-
-        // Generate custom token for Firebase authentication
-        const customToken = await admin.auth().createCustomToken(user.firebaseUid);
-
-        // Clean up used OTPs for this email
-        await Otp.deleteMany({ email: email.toLowerCase() });
-
-        res.status(201).json({
+        res.status(200).json({
             success: true,
-            message: 'Account created successfully! Welcome to InternSync.',
-            user: {
-                uid: user.firebaseUid,
-                email: user.email,
-                isNewUser: true,
-            },
-            requiresPasswordSetup: true,
-            customToken,
+            message: 'Email verified successfully. You can now create your account with Firebase.',
+            email: email.toLowerCase(),
         });
     } catch (error: any) {
         console.error('Error verifying signup OTP:', error);
@@ -214,6 +178,71 @@ export const verifySignupOTP = asyncHandler(async (req: OtpRequest, res: Respons
             success: false,
             message: 'Failed to create account. Please try again.',
         });
+    }
+});
+
+// Finalize signup: expects Firebase ID token (Authorization: Bearer <idToken>) and uid/email in body
+export const finalizeSignup = asyncHandler(async (req: Request, res: Response) => {
+    const { uid, email } = req.body as { uid?: string; email?: string };
+
+    if (!uid || !email) {
+        return res.status(400).json({ success: false, message: 'uid and email are required' });
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ success: false, message: 'Authorization token is required' });
+    }
+
+    const idToken = authHeader.split(' ')[1];
+    try {
+        const decoded = await admin.auth().verifyIdToken(idToken);
+
+        // Validate that the token matches the provided uid/email
+        if (decoded.uid !== uid) {
+            return res.status(403).json({ success: false, message: 'UID does not match token' });
+        }
+
+        if (decoded.email && decoded.email.toLowerCase() !== email.toLowerCase()) {
+            return res.status(403).json({ success: false, message: 'Email does not match token' });
+        }
+
+        // Ensure user doesn't already exist
+        const existingUser = await User.findOne({ $or: [{ firebaseUid: uid }, { email: email.toLowerCase() }] });
+        if (existingUser) {
+            return res.status(409).json({ success: false, message: 'User already exists' });
+        }
+
+        // Ensure OTP was verified recently for this email
+        const verifiedOtp = await Otp.findOne({ email: email.toLowerCase(), isUsed: true, expiresAt: { $gt: new Date() } });
+        if (!verifiedOtp) {
+            return res.status(400).json({ success: false, message: 'Please verify your email with OTP first or OTP has expired' });
+        }
+
+        // Create user record in DB
+        const user = await User.create({
+            firebaseUid: uid,
+            email: email.toLowerCase(),
+            isActive: true,
+        });
+
+        // Optional: send welcome email
+        try { await emailService.sendWelcomeEmail(email); } catch (_) { }
+
+        // Clean up OTPs for this email
+        await Otp.deleteMany({ email: email.toLowerCase() });
+
+        return res.status(201).json({
+            success: true,
+            message: 'Account finalized successfully',
+            user: {
+                uid: user.firebaseUid,
+                email: user.email,
+            },
+        });
+    } catch (err) {
+        console.error('Error finalizing signup:', err);
+        return res.status(401).json({ success: false, message: 'Invalid or expired token' });
     }
 });
 
