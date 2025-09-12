@@ -678,8 +678,7 @@ const swaggerDocument: any = {
           { "in": "query", "name": "deadlineBefore", "schema": { "type": "string", "format": "date" } },
           { "in": "query", "name": "deadlineAfter", "schema": { "type": "string", "format": "date" } },
           { "in": "query", "name": "featured", "schema": { "type": "boolean" } }
-        ]
-      },
+        ],
       "responses": {
         "200": {
           "description": "A list of jobs.",
@@ -1421,6 +1420,7 @@ const swaggerDocument: any = {
     "get": { "tags": ["Content"], "summary": "Get House Rules", "responses": { "200": { "description": "Current house rules" } } },
     "put": { "tags": ["Content"], "summary": "Update House Rules (Admin)", "security": [{ "BearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "title": { "type": "string" }, "body": { "type": "string" }, "published": { "type": "boolean" } } } } } }, "responses": { "200": { "description": "Updated" } } }
   }
-}
+  }
+};
 
 export default swaggerDocument;
