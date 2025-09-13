@@ -741,56 +741,55 @@ const swaggerDocument: any = {
             }
           }
         }
-      }
-    },
-    "post": {
-      "tags": ["Jobs"],
-      "summary": "Create a new job (Admin)",
-      "description": "Adds a new job to the platform. Requires admin privileges.",
-      "security": [{ "BearerAuth": [] }],
-      "requestBody": {
-        "description": "Job object that needs to be added.",
-        "required": true,
-        "content": {
-          "application/json": {
-            "schema": { "$ref": "#/components/schemas/JobRequest" }
-          }
-        }
       },
-      "responses": {
-        "201": {
-          "description": "Job created successfully.",
+      "post": {
+        "tags": ["Jobs"],
+        "summary": "Create a new job (Admin)",
+        "description": "Adds a new job to the platform. Requires admin privileges.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "description": "Job object that needs to be added.",
+          "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "success": { "type": "boolean", "example": true },
-                  "data": { "$ref": "#/components/schemas/Job" }
+              "schema": { "$ref": "#/components/schemas/JobRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": { "$ref": "#/components/schemas/Job" }
+                  }
                 }
               }
             }
-          }
-        },
-        "400": {
-          "description": "Invalid input, object invalid.",
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          },
+          "400": {
+            "description": "Invalid input, object invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
             }
-          }
-        },
-        "401": {
-          "description": "Unauthorized.",
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          },
+          "401": {
+            "description": "Unauthorized.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
             }
           }
         }
       }
-    }
-  },
+    },
   "/v1/job/{id}": {
     "get": {
       "tags": ["Jobs"],
@@ -1473,7 +1472,7 @@ const swaggerDocument: any = {
     "get": { "tags": ["Content"], "summary": "Get House Rules", "responses": { "200": { "description": "Current house rules" } } },
     "put": { "tags": ["Content"], "summary": "Update House Rules (Admin)", "security": [{ "BearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "title": { "type": "string" }, "body": { "type": "string" }, "published": { "type": "boolean" } } } } } }, "responses": { "200": { "description": "Updated" } } }
   }
-
+  }
 };
 
 export default swaggerDocument;
