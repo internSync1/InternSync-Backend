@@ -105,15 +105,19 @@ function parseSalary(salaryStr, amountStr, prizeStr) {
     return { currency, amount };
 }
 
-// Normalize CSV 'type' to canonical set: internship | activity | extracurricular
+// Normalize CSV 'type' to canonical set: internship | scholarship | extracurricular | activity
 function normalizeType(raw) {
     const s = (parseCSVField(raw) || '').toString().trim().toLowerCase();
     if (!s) return 'internship';
 
+    // Scholarships and similar funding opportunities
+    const scholarshipWords = ['scholarship', 'scholar', 'bursary', 'grant', 'fellowship', 'award', 'financial aid', 'tuition'];
+    if (scholarshipWords.some(w => s.includes(w))) return 'scholarship';
+
     // Internships
     if (s.includes('intern')) return 'internship';
 
-    // Activities: general events and student activities
+    // Activities (we keep this internal type, but frontend may treat under "extracurricular")
     const activityWords = ['activity', 'activities', 'event', 'hackathon', 'competition', 'bootcamp', 'workshop', 'course', 'conference', 'meetup'];
     if (activityWords.some(w => s.includes(w))) return 'activity';
 
@@ -129,13 +133,21 @@ function deriveCategories(normalizedType, existingCategories = [], tags = []) {
     const set = new Set(Array.isArray(existingCategories) ? existingCategories : []);
     const add = (v) => { if (v && String(v).trim() !== '') set.add(v); };
     if (normalizedType === 'internship') {
+        add('Internship');
         add('Internships');
+    } else if (normalizedType === 'scholarship') {
+        add('Scholarship');
+        add('Scholarships');
+        add('Fellowship');
+        add('Grant');
     } else if (normalizedType === 'activity') {
         add('Activity');
         add('Activities');
     } else if (normalizedType === 'extracurricular') {
+        add('Extracurricular');
         add('Extracurriculars');
         add('Volunteer');
+        add('Volunteering');
     }
     // Optionally keep any helpful tags as categories if provided in CSV
     // (We avoid over-inflating categories; keep to core labels.)
@@ -188,6 +200,8 @@ async function importJobs() {
                             stipend: stipend,
                         },
                         location: parseCSVField(row.location) || 'Remote',
+                        // Populate skillsRequired with tags as a reasonable default from CSV
+                        skillsRequired: Array.isArray(tags) ? tags : (tags ? String(tags).split(',').map(s => s.trim()).filter(Boolean) : []),
                         labels: tags,
                         applicationDeadline: parseCSVField(row.deadline) ? new Date(parseCSVField(row.deadline)) : null,
                         status: 'OPEN',

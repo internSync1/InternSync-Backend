@@ -27,12 +27,16 @@ export const getAllJobs = asyncHandler(
             stipendMax,
             deadlineBefore,
             deadlineAfter,
-            featured
+            featured,
+            type,
+            opportunityType
         }: IPaginationRequest & {
             status?: string;
             startDate?: string;
             endDate?: string;
             sortBy?: string;
+            type?: string;
+            opportunityType?: string;
             categories?: string;
             tags?: string;
             sourceType?: 'csv' | 'web' | string;
@@ -78,6 +82,44 @@ export const getAllJobs = asyncHandler(
 
         if (startDate && endDate) {
             filterQuery.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+        }
+
+        // High-level type filter (alias: opportunityType). Maps to jobType/categories.
+        const rawType = String((req.query as any).type || (req.query as any).opportunityType || '').trim().toLowerCase();
+        if (rawType) {
+            const map: Record<string, { jobType: string[]; categories: string[] }> = {
+                internship: { jobType: ['internship', 'internships'], categories: ['Internship', 'Internships'] },
+                scholarship: { jobType: ['scholarship', 'scholarships', 'fellowship', 'grant'], categories: ['Scholarship', 'Scholarships', 'Fellowship', 'Grant'] },
+                extracurricular: {
+                    jobType: ['extracurricular', 'extracurriculars', 'volunteer', 'volunteering', 'activity', 'activities'],
+                    categories: ['Extracurricular', 'Extracurriculars', 'Volunteer', 'Volunteering', 'Activity', 'Activities']
+                },
+                activity: { jobType: ['activity', 'activities'], categories: ['Activity', 'Activities'] },
+            };
+
+            let typeJobTypes: string[] = [];
+            let typeCategories: string[] = [];
+
+            if (map.internship.jobType.includes(rawType) || map.internship.categories.map(s => s.toLowerCase()).includes(rawType)) {
+                typeJobTypes = map.internship.jobType;
+                typeCategories = map.internship.categories;
+            } else if (map.scholarship.jobType.includes(rawType) || map.scholarship.categories.map(s => s.toLowerCase()).includes(rawType)) {
+                typeJobTypes = map.scholarship.jobType;
+                typeCategories = map.scholarship.categories;
+            } else if (map.extracurricular.jobType.includes(rawType) || map.extracurricular.categories.map(s => s.toLowerCase()).includes(rawType)) {
+                typeJobTypes = map.extracurricular.jobType;
+                typeCategories = map.extracurricular.categories;
+            } else if (map.activity.jobType.includes(rawType) || map.activity.categories.map(s => s.toLowerCase()).includes(rawType)) {
+                typeJobTypes = map.activity.jobType;
+                typeCategories = map.activity.categories;
+            }
+
+            if (typeJobTypes.length || typeCategories.length) {
+                const orClause: any[] = [];
+                if (typeJobTypes.length) orClause.push({ jobType: { $in: typeJobTypes } });
+                if (typeCategories.length) orClause.push({ categories: { $in: typeCategories } });
+                if (orClause.length) filterQuery.$and = [...(filterQuery.$and || []), { $or: orClause }];
+            }
         }
 
         // Advanced filters

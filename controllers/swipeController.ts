@@ -53,8 +53,13 @@ export const getNextJob = asyncHandler(
         const rawType = (type || opportunityType || '').toString().trim().toLowerCase();
         const map: Record<string, { jobType: string[]; categories: string[] }> = {
             internship: { jobType: ['internship', 'internships'], categories: ['Internship', 'Internships'] },
+            scholarship: { jobType: ['scholarship', 'scholarships', 'fellowship', 'grant'], categories: ['Scholarship', 'Scholarships', 'Fellowship', 'Grant'] },
             activity: { jobType: ['activity', 'activities'], categories: ['Activity', 'Activities'] },
-            extracurricular: { jobType: ['extracurricular', 'extracurriculars', 'volunteer', 'volunteering'], categories: ['Extracurricular', 'Extracurriculars', 'Volunteer', 'Volunteering'] },
+            // Treat extracurricular bucket as superset including activities and volunteering
+            extracurricular: {
+                jobType: ['extracurricular', 'extracurriculars', 'volunteer', 'volunteering', 'activity', 'activities'],
+                categories: ['Extracurricular', 'Extracurriculars', 'Volunteer', 'Volunteering', 'Activity', 'Activities']
+            },
         };
 
         let typeJobTypes: string[] = [];
@@ -64,6 +69,9 @@ export const getNextJob = asyncHandler(
             if (map.internship.jobType.includes(rawType) || map.internship.categories.map(s => s.toLowerCase()).includes(rawType)) {
                 typeJobTypes = map.internship.jobType;
                 typeCategories = map.internship.categories;
+            } else if (map.scholarship.jobType.includes(rawType) || map.scholarship.categories.map(s => s.toLowerCase()).includes(rawType)) {
+                typeJobTypes = map.scholarship.jobType;
+                typeCategories = map.scholarship.categories;
             } else if (map.activity.jobType.includes(rawType) || map.activity.categories.map(s => s.toLowerCase()).includes(rawType)) {
                 typeJobTypes = map.activity.jobType;
                 typeCategories = map.activity.categories;
@@ -72,9 +80,19 @@ export const getNextJob = asyncHandler(
                 typeCategories = map.extracurricular.categories;
             }
         } else {
-            // Default: allow these three buckets
-            typeJobTypes = Array.from(new Set([...map.internship.jobType, ...map.activity.jobType, ...map.extracurricular.jobType]));
-            typeCategories = Array.from(new Set([...map.internship.categories, ...map.activity.categories, ...map.extracurricular.categories]));
+            // Default: allow all primary buckets
+            typeJobTypes = Array.from(new Set([
+                ...map.internship.jobType,
+                ...map.scholarship.jobType,
+                ...map.activity.jobType,
+                ...map.extracurricular.jobType,
+            ]));
+            typeCategories = Array.from(new Set([
+                ...map.internship.categories,
+                ...map.scholarship.categories,
+                ...map.activity.categories,
+                ...map.extracurricular.categories,
+            ]));
         }
 
         if (typeJobTypes.length || typeCategories.length) {

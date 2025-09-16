@@ -37,6 +37,7 @@ const jobSchema = new Schema<IJob>({
     description: { type: JobDescriptionSchema, required: true },
     duration: String,
     location: String,
+    skillsRequired: [{ type: String }],
     labels: [{ type: String }],
     startDate: Date,
     endDate: Date,

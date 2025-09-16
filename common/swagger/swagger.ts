@@ -702,42 +702,44 @@ const swaggerDocument: any = {
           { "in": "query", "name": "tags", "schema": { "type": "string" }, "description": "Comma-separated tags" },
           { "in": "query", "name": "sourceType", "schema": { "type": "string", "enum": ["csv", "web"] } },
           { "in": "query", "name": "isRemote", "schema": { "type": "boolean" } },
-          { "in": "query", "name": "jobType", "schema": { "type": "string" }, "description": "internship | activity | extracurricular | etc" },
+          { "in": "query", "name": "jobType", "schema": { "type": "string" }, "description": "Original field on Job documents (e.g., 'internship', 'scholarship', 'extracurricular', 'activity')." },
+          { "in": "query", "name": "type", "schema": { "type": "string", "enum": ["internship", "scholarship", "extracurricular", "activity"] }, "description": "High-level filter alias mapped to jobType/categories." },
+          { "in": "query", "name": "opportunityType", "schema": { "type": "string", "enum": ["internship", "scholarship", "extracurricular", "activity"] }, "description": "Alias of 'type' for flexibility." },
           { "in": "query", "name": "stipendMin", "schema": { "type": "number" } },
           { "in": "query", "name": "stipendMax", "schema": { "type": "number" } },
           { "in": "query", "name": "deadlineBefore", "schema": { "type": "string", "format": "date" } },
           { "in": "query", "name": "deadlineAfter", "schema": { "type": "string", "format": "date" } },
           { "in": "query", "name": "featured", "schema": { "type": "boolean" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of jobs.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "pageNo": { "type": "integer", "example": 1 },
-                    "offset": { "type": "integer", "example": 10 },
-                    "totalItems": { "type": "integer", "example": 50 },
-                    "totalPages": { "type": "integer", "example": 5 },
-                    "nextPage": { "type": "integer", "example": 2, "nullable": true },
-                    "data": {
-                      "type": "array",
-                      "items": { "$ref": "#/components/schemas/Job" }
-                    }
+        ]
+        },
+      "responses": {
+        "200": {
+          "description": "A list of jobs.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "success": { "type": "boolean", "example": true },
+                  "pageNo": { "type": "integer", "example": 1 },
+                  "offset": { "type": "integer", "example": 10 },
+                  "totalItems": { "type": "integer", "example": 50 },
+                  "totalPages": { "type": "integer", "example": 5 },
+                  "nextPage": { "type": "integer", "example": 2, "nullable": true },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Job" }
                   }
                 }
               }
             }
-          },
-          "400": {
-            "description": "Invalid status value.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
+          }
+        },
+        "400": {
+          "description": "Invalid status value.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
             }
           }
         }
@@ -790,6 +792,7 @@ const swaggerDocument: any = {
         }
       }
     },
+
   "/v1/job/{id}": {
     "get": {
       "tags": ["Jobs"],
@@ -1426,44 +1429,18 @@ const swaggerDocument: any = {
       "summary": "Get next job for swiping (CSV-only by default)",
       "security": [{ "BearerAuth": [] }],
       "parameters": [
-        { "in": "query", "name": "type", "schema": { "type": "string", "enum": ["internships", "activities", "extracurriculars"] }, "description": "Tab filter" }
+        { "in": "query", "name": "type", "schema": { "type": "string", "enum": ["internship", "scholarship", "extracurricular", "activity"] }, "description": "High-level filter: internship | scholarship | extracurricular. 'activity' is treated under the extracurricular bucket as well." },
+        { "in": "query", "name": "opportunityType", "schema": { "type": "string", "enum": ["internship", "scholarship", "extracurricular", "activity"] }, "description": "Alias of 'type' for flexibility." }
       ],
       "responses": { "200": { "description": "Next job or null" } }
     }
   },
-  "/v1/swipe/action": {
-    "post": {
-      "tags": ["Swipe"],
-      "summary": "Submit a swipe action",
-      "security": [{ "BearerAuth": [] }],
-      "requestBody": {
-        "required": true,
-        "content": { "application/json": { "schema": { "type": "object", "properties": { "jobId": { "type": "string" }, "action": { "type": "string", "enum": ["like", "dislike", "superlike", "skip"] } }, "required": ["jobId", "action"] } } }
-      },
-      "responses": { "200": { "description": "Action recorded" } }
-    }
-  },
+  "/v1/swipe/action": { "post": { "tags": ["Swipe"], "summary": "Submit a swipe action", "security": [{ "BearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "jobId": { "type": "string" }, "action": { "type": "string", "enum": ["like", "dislike", "superlike", "skip"] } }, "required": ["jobId", "action"] } } } }, "responses": { "200": { "description": "Action recorded" } } } },
   "/v1/swipe/history": { "get": { "tags": ["Swipe"], "summary": "Get swipe history", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "History list" } } } },
   "/v1/swipe/liked": { "get": { "tags": ["Swipe"], "summary": "Get liked jobs", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Liked list" } } } },
   "/v1/swipe/stats": { "get": { "tags": ["Swipe"], "summary": "Get swipe stats", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Stats" } } } },
-  "/v1/notifications/register-device": {
-    "post": {
-      "tags": ["Notifications"],
-      "summary": "Register FCM device token",
-      "security": [{ "BearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" } }, "required": ["token"] } } } },
-      "responses": { "200": { "description": "Registered" } }
-    }
-  },
-  "/v1/notifications/unregister-device": {
-    "post": {
-      "tags": ["Notifications"],
-      "summary": "Unregister FCM device token",
-      "security": [{ "BearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" } }, "required": ["token"] } } } },
-      "responses": { "200": { "description": "Unregistered" } }
-    }
-  },
+  "/v1/notifications/register-device": { "post": { "tags": ["Notifications"], "summary": "Register FCM device token", "security": [{ "BearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" } }, "required": ["token"] } } } }, "responses": { "200": { "description": "Registered" } } } },
+  "/v1/notifications/unregister-device": { "post": { "tags": ["Notifications"], "summary": "Unregister FCM device token", "security": [{ "BearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" } }, "required": ["token"] } } } }, "responses": { "200": { "description": "Unregistered" } } } },
   "/v1/notifications": { "get": { "tags": ["Notifications"], "summary": "List notifications", "security": [{ "BearerAuth": [] }], "parameters": [{ "in": "query", "name": "unreadOnly", "schema": { "type": "boolean" } }, { "in": "query", "name": "pageNo", "schema": { "type": "integer", "default": 1 } }, { "in": "query", "name": "offset", "schema": { "type": "integer", "default": 20 } }], "responses": { "200": { "description": "List" } } } },
   "/v1/notifications/{id}/read": { "patch": { "tags": ["Notifications"], "summary": "Mark single notification as read", "security": [{ "BearerAuth": [] }], "parameters": [{ "in": "path", "name": "id", "schema": { "type": "string" }, "required": true }], "responses": { "200": { "description": "Marked" } } } },
   "/v1/notifications/read-all": { "patch": { "tags": ["Notifications"], "summary": "Mark all as read", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "All marked" } } } },
@@ -1472,7 +1449,7 @@ const swaggerDocument: any = {
     "get": { "tags": ["Content"], "summary": "Get House Rules", "responses": { "200": { "description": "Current house rules" } } },
     "put": { "tags": ["Content"], "summary": "Update House Rules (Admin)", "security": [{ "BearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "title": { "type": "string" }, "body": { "type": "string" }, "published": { "type": "boolean" } } } } } }, "responses": { "200": { "description": "Updated" } } }
   }
-  }
+}
 };
 
 export default swaggerDocument;
