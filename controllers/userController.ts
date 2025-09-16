@@ -68,13 +68,18 @@ export const updateUserProfile = asyncHandler(
       interests,
       answers,
       aboutMe,
-      resume,
+      // Accept both legacy 'resume' and current 'resumeUrl'
+      resume: resumeRaw,
+      resumeUrl: resumeUrlRaw,
       education,
       skills,
       languages,
       appreciation,
       workExperience,
     } = req.body;
+
+    const resolvedResumeUrl = resumeUrlRaw || resumeRaw;
+
     const fieldsToUpdate = {
       ...(firstName && { firstName }),
       ...(lastName && { lastName }),
@@ -85,7 +90,7 @@ export const updateUserProfile = asyncHandler(
       ...(interests && { interests }),
       ...(answers && { answers }),
       ...(aboutMe && { aboutMe }),
-      ...(resume && { resume }),
+      ...(resolvedResumeUrl && { resumeUrl: resolvedResumeUrl }),
       ...(education && { education }),
       ...(skills && { skills }),
       ...(languages && { languages }),
@@ -113,3 +118,101 @@ export const getUserProfile = asyncHandler(
     });
   }
 );
+
+
+export const updateAboutMe = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const { aboutMe } = req.body as { aboutMe?: string };
+  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { aboutMe: aboutMe || '' } }, { new: true });
+  res.status(200).json({ success: true, message: 'About me updated' });
+});
+
+export const addWorkExperience = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const { jobTitle, company, startDate, endDate, current, description } = req.body as any;
+  const exp: any = {
+    ...(jobTitle && { jobTitle }),
+    ...(company && { company }),
+    ...(startDate && { startDate: new Date(startDate) }),
+    ...(endDate && { endDate: new Date(endDate) }),
+    ...(typeof current !== 'undefined' && { current: !!current }),
+    ...(description && { description }),
+  };
+  const user = await User.findOneAndUpdate(
+    { firebaseUid: uid },
+    { $push: { workExperience: exp } },
+    { new: true }
+  );
+  const created = user?.workExperience[user.workExperience.length - 1];
+  res.status(201).json({ success: true, message: 'Work experience added', data: created });
+});
+
+export const updateWorkExperience = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const { id } = req.params;
+  const { jobTitle, company, startDate, endDate, current, description } = req.body as any;
+
+  const setObj: any = {};
+  if (jobTitle) setObj['workExperience.$.jobTitle'] = jobTitle;
+  if (company) setObj['workExperience.$.company'] = company;
+  if (startDate) setObj['workExperience.$.startDate'] = new Date(startDate);
+  if (endDate) setObj['workExperience.$.endDate'] = new Date(endDate);
+  if (typeof current !== 'undefined') setObj['workExperience.$.current'] = !!current;
+  if (description) setObj['workExperience.$.description'] = description;
+
+  await User.updateOne({ firebaseUid: uid, 'workExperience._id': id }, { $set: setObj }, { upsert: false });
+  const user = await User.findOne({ firebaseUid: uid });
+  const updated = user?.workExperience.find((e: any) => String(e._id) === String(id));
+  res.status(200).json({ success: true, message: 'Work experience updated', data: updated });
+});
+
+export const deleteWorkExperience = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const { id } = req.params;
+  await User.updateOne({ firebaseUid: uid }, { $pull: { workExperience: { _id: id } } });
+  res.status(200).json({ success: true, message: 'Work experience deleted' });
+});
+
+export const updateSkills = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const { skills } = req.body as { skills?: string[] };
+  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { skills: Array.isArray(skills) ? skills : [] } }, { new: true });
+  res.status(200).json({ success: true, message: 'Skills updated' });
+});
+
+export const updateLanguages = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const { languages } = req.body as { languages?: string[] };
+  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { languages: Array.isArray(languages) ? languages : [] } }, { new: true });
+  res.status(200).json({ success: true, message: 'Languages updated' });
+});
+
+export const updateEducation = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const { education } = req.body as { education?: string[] };
+  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { education: Array.isArray(education) ? education : [] } }, { new: true });
+  res.status(200).json({ success: true, message: 'Education updated' });
+});
+
+export const updateAppreciation = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const { appreciation } = req.body as { appreciation?: string[] };
+  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { appreciation: Array.isArray(appreciation) ? appreciation : [] } }, { new: true });
+  res.status(200).json({ success: true, message: 'Appreciation updated' });
+});
+
+export const updateProfilePicture = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const { profilePicture, url } = req.body as { profilePicture?: string; url?: string };
+  const finalUrl = profilePicture || url || '';
+  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { profilePicture: finalUrl } }, { new: true });
+  res.status(200).json({ success: true, message: 'Profile picture updated' });
+});
+
+export const updateResumeUrl = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const { resumeUrl, url } = req.body as { resumeUrl?: string; url?: string };
+  const finalUrl = resumeUrl || url || '';
+  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { resumeUrl: finalUrl } }, { new: true });
+  res.status(200).json({ success: true, message: 'Resume URL updated' });
+});

@@ -5,6 +5,7 @@ import helmet from "helmet";
 import cors from "cors";
 import swaggerUi from 'swagger-ui-express';
 import bodyParser from "body-parser";
+import path from 'path';
 import { connect } from "./connection/connection";
 import routeManager from './routes/router.manager'
 import swaggerDocument from './common/swagger/swagger';
@@ -24,6 +25,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(helmet());
 app.use(bodyParser.json());
+
+// Serve static uploads (profile pictures, resumes)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const serverPort = process.env.PORT || 5000;
 

@@ -43,12 +43,37 @@ const swaggerDocument: any = {
           "email": { "type": "string", "format": "email", "example": "user@example.com" },
           "firstName": { "type": "string", "example": "John" },
           "lastName": { "type": "string", "example": "Doe" },
+          "phoneNumber": { "type": "string", "example": "+1234567890" },
           "profilePicture": { "type": "string", "example": "https://example.com/avatar.jpg" },
+          "aboutMe": { "type": "string", "example": "Tell us about yourself" },
+          "resumeUrl": { "type": "string", "example": "https://example.com/uploads/resume.pdf" },
+          "workExperience": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WorkExperience" }
+          },
+          "education": { "type": "array", "items": { "type": "string" } },
+          "skills": { "type": "array", "items": { "type": "string" } },
+          "languages": { "type": "array", "items": { "type": "string" } },
+          "appreciation": { "type": "array", "items": { "type": "string" } },
+          "gender": { "type": "string", "example": "female" },
+          "dateOfBirth": { "type": "string", "format": "date" },
           "isActive": { "type": "boolean", "example": true },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" }
         },
         "required": ["firebaseUid", "email"]
+      },
+      "WorkExperience": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "format": "uuid" },
+          "jobTitle": { "type": "string", "example": "Manager" },
+          "company": { "type": "string", "example": "Acme Inc" },
+          "startDate": { "type": "string", "format": "date", "example": "2024-01-01" },
+          "endDate": { "type": "string", "format": "date", "nullable": true, "example": "2024-06-30" },
+          "current": { "type": "boolean", "example": false },
+          "description": { "type": "string", "example": "Worked on mobile app" }
+        }
       },
       "JobCompany": {
         "type": "object",
@@ -261,7 +286,9 @@ const swaggerDocument: any = {
           "originalName": { "type": "string", "example": "resume.pdf" },
           "mimeType": { "type": "string", "example": "application/pdf" },
           "size": { "type": "number", "example": 1024000 },
-          "url": { "type": "string", "example": "https://example.com/uploads/generated-file-name.pdf" }
+          "url": { "type": "string", "example": "/uploads/generated-file-name.pdf" },
+          "downloadUrl": { "type": "string", "example": "/v1/file/download/generated-file-name.pdf" },
+          "absoluteUrl": { "type": "string", "example": "https://example.com/uploads/generated-file-name.pdf" }
         }
       },
       "SuccessMessageResponse": {
@@ -711,87 +738,87 @@ const swaggerDocument: any = {
           { "in": "query", "name": "deadlineAfter", "schema": { "type": "string", "format": "date" } },
           { "in": "query", "name": "featured", "schema": { "type": "boolean" } }
         ]
-        },
+    },
+    "responses": {
+      "200": {
+        "description": "A list of jobs.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": { "type": "boolean", "example": true },
+                "pageNo": { "type": "integer", "example": 1 },
+                "offset": { "type": "integer", "example": 10 },
+                "totalItems": { "type": "integer", "example": 50 },
+                "totalPages": { "type": "integer", "example": 5 },
+                "nextPage": { "type": "integer", "example": 2, "nullable": true },
+                "data": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Job" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid status value.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      }
+    },
+    "post": {
+      "tags": ["Jobs"],
+      "summary": "Create a new job (Admin)",
+      "description": "Adds a new job to the platform. Requires admin privileges.",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": {
+        "description": "Job object that needs to be added.",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/JobRequest" }
+          }
+        }
+      },
       "responses": {
-        "200": {
-          "description": "A list of jobs.",
+        "201": {
+          "description": "Job created successfully.",
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
                   "success": { "type": "boolean", "example": true },
-                  "pageNo": { "type": "integer", "example": 1 },
-                  "offset": { "type": "integer", "example": 10 },
-                  "totalItems": { "type": "integer", "example": 50 },
-                  "totalPages": { "type": "integer", "example": 5 },
-                  "nextPage": { "type": "integer", "example": 2, "nullable": true },
-                  "data": {
-                    "type": "array",
-                    "items": { "$ref": "#/components/schemas/Job" }
-                  }
+                  "data": { "$ref": "#/components/schemas/Job" }
                 }
               }
             }
           }
         },
         "400": {
-          "description": "Invalid status value.",
+          "description": "Invalid input, object invalid.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized.",
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/ErrorResponse" }
             }
           }
         }
-      },
-      "post": {
-        "tags": ["Jobs"],
-        "summary": "Create a new job (Admin)",
-        "description": "Adds a new job to the platform. Requires admin privileges.",
-        "security": [{ "BearerAuth": [] }],
-        "requestBody": {
-          "description": "Job object that needs to be added.",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/JobRequest" }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Job created successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "data": { "$ref": "#/components/schemas/Job" }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input, object invalid.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
       }
-    },
+    }
+  },
 
   "/v1/job/{id}": {
     "get": {
@@ -1448,6 +1475,95 @@ const swaggerDocument: any = {
   "/v1/content/house-rules": {
     "get": { "tags": ["Content"], "summary": "Get House Rules", "responses": { "200": { "description": "Current house rules" } } },
     "put": { "tags": ["Content"], "summary": "Update House Rules (Admin)", "security": [{ "BearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "title": { "type": "string" }, "body": { "type": "string" }, "published": { "type": "boolean" } } } } } }, "responses": { "200": { "description": "Updated" } } }
+  },
+  "/v1/user/about": {
+    "put": {
+      "tags": ["User Profile"],
+      "summary": "Update about me",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "aboutMe": { "type": "string" } }, "required": ["aboutMe"] } } } },
+      "responses": { "200": { "description": "About me updated" } }
+    }
+  },
+  "/v1/user/work-experience": {
+    "post": {
+      "tags": ["User Profile"],
+      "summary": "Add work experience",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "jobTitle": { "type": "string" }, "company": { "type": "string" }, "startDate": { "type": "string", "format": "date" }, "endDate": { "type": "string", "format": "date" }, "current": { "type": "boolean" }, "description": { "type": "string" } }, "required": ["jobTitle", "company", "startDate"] } } } },
+      "responses": { "201": { "description": "Work experience added" } }
+    }
+  },
+  "/v1/user/work-experience/{id}": {
+    "put": {
+      "tags": ["User Profile"],
+      "summary": "Update work experience",
+      "security": [{ "BearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "requestBody": { "required": false, "content": { "application/json": { "schema": { "type": "object", "properties": { "jobTitle": { "type": "string" }, "company": { "type": "string" }, "startDate": { "type": "string", "format": "date" }, "endDate": { "type": "string", "format": "date" }, "current": { "type": "boolean" }, "description": { "type": "string" } } } } } },
+      "responses": { "200": { "description": "Work experience updated" } }
+    },
+    "delete": {
+      "tags": ["User Profile"],
+      "summary": "Delete work experience",
+      "security": [{ "BearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "responses": { "200": { "description": "Work experience deleted" } }
+    }
+  },
+  "/v1/user/skills": {
+    "put": {
+      "tags": ["User Profile"],
+      "summary": "Update skills",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "skills": { "type": "array", "items": { "type": "string" } } }, "required": ["skills"] } } } },
+      "responses": { "200": { "description": "Skills updated" } }
+    }
+  },
+  "/v1/user/languages": {
+    "put": {
+      "tags": ["User Profile"],
+      "summary": "Update languages",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "languages": { "type": "array", "items": { "type": "string" } } }, "required": ["languages"] } } } },
+      "responses": { "200": { "description": "Languages updated" } }
+    }
+  },
+  "/v1/user/education": {
+    "put": {
+      "tags": ["User Profile"],
+      "summary": "Update education",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "education": { "type": "array", "items": { "type": "string" } } }, "required": ["education"] } } } },
+      "responses": { "200": { "description": "Education updated" } }
+    }
+  },
+  "/v1/user/appreciation": {
+    "put": {
+      "tags": ["User Profile"],
+      "summary": "Update appreciation",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "appreciation": { "type": "array", "items": { "type": "string" } } }, "required": ["appreciation"] } } } },
+      "responses": { "200": { "description": "Appreciation updated" } }
+    }
+  },
+  "/v1/user/profile-picture": {
+    "put": {
+      "tags": ["User Profile"],
+      "summary": "Update profile picture URL",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "profilePicture": { "type": "string" }, "url": { "type": "string" } } } } } },
+      "responses": { "200": { "description": "Profile picture updated" } }
+    }
+  },
+  "/v1/user/resume": {
+    "put": {
+      "tags": ["User Profile"],
+      "summary": "Update resume URL",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "resumeUrl": { "type": "string" }, "url": { "type": "string" } } } } } },
+      "responses": { "200": { "description": "Resume URL updated" } }
+    }
   }
 }
 };

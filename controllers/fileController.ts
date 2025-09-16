@@ -15,11 +15,17 @@ export const uploadFile = asyncHandler(async (req: Request, res: Response, next:
         return next(new ErrorResponse('Please upload a file', 400));
     }
 
+    const publicUrl = `/uploads/${req.file.filename}`;
+    const downloadUrl = `/v1/file/download/${req.file.filename}`;
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
     res.status(201).json({
         success: true,
         message: 'File uploaded successfully',
         data: {
-            url: `/uploads/${req.file.filename}`,
+            url: publicUrl,
+            downloadUrl,
+            absoluteUrl: `${baseUrl}${publicUrl}`,
             filename: req.file.filename,
             originalname: req.file.originalname,
             mimetype: req.file.mimetype,
