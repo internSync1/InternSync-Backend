@@ -42,6 +42,7 @@ const UserSchema = new Schema<IUserDocument>(
     profilePicture: {
       type: String,
     },
+    headline: { type: String, default: "" },
     // Push notification support
     deviceTokens: [{ type: String }],
     notificationPreferences: {

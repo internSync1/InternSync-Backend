@@ -13,6 +13,7 @@ import {
   updateAppreciation,
   updateProfilePicture,
   updateResumeUrl,
+  updateHeadline,
 } from "../controllers/userController";
 import { firebaseAuth } from "../common/middleware/firebaseAuth";
 import { Request } from "express";
@@ -42,5 +43,8 @@ router.put('/appreciation', firebaseAuth, (req: Request, res, next) => updateApp
 // Media URLs (after /v1/file/upload)
 router.put('/profile-picture', firebaseAuth, (req: Request, res, next) => updateProfilePicture(req as any, res, next));
 router.put('/resume', firebaseAuth, (req: Request, res, next) => updateResumeUrl(req as any, res, next));
+
+// Headline (user-visible role)
+router.put('/headline', firebaseAuth, (req: Request, res, next) => updateHeadline(req as any, res, next));
 
 export default router;

@@ -63,6 +63,7 @@ export const updateUserProfile = asyncHandler(
       lastName,
       profilePicture,
       phoneNumber,
+      headline,
       gender,
       dateOfBirth,
       interests,
@@ -85,6 +86,7 @@ export const updateUserProfile = asyncHandler(
       ...(lastName && { lastName }),
       ...(phoneNumber && { phoneNumber }),
       ...(profilePicture && { profilePicture }),
+      ...(headline && { headline }),
       ...(gender && { gender }),
       ...(dateOfBirth && { dateOfBirth }),
       ...(interests && { interests }),
@@ -215,4 +217,11 @@ export const updateResumeUrl = asyncHandler(async (req: AuthRequest, res: Respon
   const finalUrl = resumeUrl || url || '';
   await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { resumeUrl: finalUrl } }, { new: true });
   res.status(200).json({ success: true, message: 'Resume URL updated' });
+});
+
+export const updateHeadline = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const { headline } = req.body as { headline?: string };
+  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { headline: headline || '' } }, { new: true });
+  res.status(200).json({ success: true, message: 'Headline updated' });
 });

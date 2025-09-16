@@ -45,6 +45,7 @@ const swaggerDocument: any = {
           "lastName": { "type": "string", "example": "Doe" },
           "phoneNumber": { "type": "string", "example": "+1234567890" },
           "profilePicture": { "type": "string", "example": "https://example.com/avatar.jpg" },
+          "headline": { "type": "string", "example": "Student, Designer, Developer, Volunteer" },
           "aboutMe": { "type": "string", "example": "Tell us about yourself" },
           "resumeUrl": { "type": "string", "example": "https://example.com/uploads/resume.pdf" },
           "workExperience": {
@@ -1563,6 +1564,23 @@ const swaggerDocument: any = {
       "security": [{ "BearerAuth": [] }],
       "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "resumeUrl": { "type": "string" }, "url": { "type": "string" } } } } } },
       "responses": { "200": { "description": "Resume URL updated" } }
+    }
+  },
+  "/v1/user/headline": {
+    "put": {
+      "tags": ["User Profile"],
+      "summary": "Update user headline (profile role)",
+      "description": "Sets the user's profile headline, e.g., Student, Designer, Developer, Volunteer. Not to be confused with backend access role.",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "headline": { "type": "string", "example": "Designer" } }, "required": ["headline"] }
+          }
+        }
+      },
+      "responses": { "200": { "description": "Headline updated" } }
     }
   }
 }

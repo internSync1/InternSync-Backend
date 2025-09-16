@@ -17,6 +17,7 @@ export interface IUserDocument extends Document {
   email?: string;
   phoneNumber?: string;
   profilePicture?: string;
+  headline?: string;
   // Notifications
   deviceTokens?: string[];
   notificationPreferences?: {
