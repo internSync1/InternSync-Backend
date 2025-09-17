@@ -208,7 +208,10 @@ export const updateProfilePicture = asyncHandler(async (req: AuthRequest, res: R
   const { profilePicture, url } = req.body as { profilePicture?: string; url?: string };
   const finalUrl = profilePicture || url || '';
   await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { profilePicture: finalUrl } }, { new: true });
-  res.status(200).json({ success: true, message: 'Profile picture updated' });
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const isAbsolute = /^https?:\/\//i.test(finalUrl);
+  const absoluteUrl = isAbsolute ? finalUrl : (finalUrl ? `${baseUrl}${finalUrl}` : '');
+  res.status(200).json({ success: true, message: 'Profile picture updated', data: { url: finalUrl, absoluteUrl } });
 });
 
 export const updateResumeUrl = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -216,7 +219,10 @@ export const updateResumeUrl = asyncHandler(async (req: AuthRequest, res: Respon
   const { resumeUrl, url } = req.body as { resumeUrl?: string; url?: string };
   const finalUrl = resumeUrl || url || '';
   await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { resumeUrl: finalUrl } }, { new: true });
-  res.status(200).json({ success: true, message: 'Resume URL updated' });
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const isAbsolute = /^https?:\/\//i.test(finalUrl);
+  const absoluteUrl = isAbsolute ? finalUrl : (finalUrl ? `${baseUrl}${finalUrl}` : '');
+  res.status(200).json({ success: true, message: 'Resume URL updated', data: { url: finalUrl, absoluteUrl } });
 });
 
 export const updateHeadline = asyncHandler(async (req: AuthRequest, res: Response) => {
