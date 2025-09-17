@@ -208,10 +208,19 @@ export const updateProfilePicture = asyncHandler(async (req: AuthRequest, res: R
   const { profilePicture, url } = req.body as { profilePicture?: string; url?: string };
   const finalUrl = profilePicture || url || '';
   await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { profilePicture: finalUrl } }, { new: true });
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const forwardedProto = (req.headers['x-forwarded-proto'] as string) || '';
+  const proto = forwardedProto.split(',')[0] || req.protocol;
+  const baseUrl = `${proto}://${req.get('host')}`;
   const isAbsolute = /^https?:\/\//i.test(finalUrl);
   const absoluteUrl = isAbsolute ? finalUrl : (finalUrl ? `${baseUrl}${finalUrl}` : '');
-  res.status(200).json({ success: true, message: 'Profile picture updated', data: { url: finalUrl, absoluteUrl } });
+  res.status(200).json({
+    success: true,
+    message: 'Profile picture updated',
+    url: finalUrl,
+    publicUrl: finalUrl,
+    absoluteUrl,
+    data: { url: finalUrl, publicUrl: finalUrl, absoluteUrl }
+  });
 });
 
 export const updateResumeUrl = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -219,20 +228,21 @@ export const updateResumeUrl = asyncHandler(async (req: AuthRequest, res: Respon
   const { resumeUrl, url } = req.body as { resumeUrl?: string; url?: string };
   const finalUrl = resumeUrl || url || '';
   await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { resumeUrl: finalUrl } }, { new: true });
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const forwardedProto = (req.headers['x-forwarded-proto'] as string) || '';
+  const proto = forwardedProto.split(',')[0] || req.protocol;
+  const baseUrl = `${proto}://${req.get('host')}`;
   const isAbsolute = /^https?:\/\//i.test(finalUrl);
   const absoluteUrl = isAbsolute ? finalUrl : (finalUrl ? `${baseUrl}${finalUrl}` : '');
-  res.status(200).json({ success: true, message: 'Resume URL updated', data: { url: finalUrl, absoluteUrl } });
+  res.status(200).json({
+    success: true,
+    message: 'Resume URL updated',
+    url: finalUrl,
+    publicUrl: finalUrl,
+    absoluteUrl,
+    data: { url: finalUrl, publicUrl: finalUrl, absoluteUrl }
+  });
 });
 
-export const updateHeadline = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { uid } = req.user;
-  const { headline } = req.body as { headline?: string };
-  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { headline: headline || '' } }, { new: true });
-  res.status(200).json({ success: true, message: 'Headline updated' });
-});
-
-// Direct upload handlers (multipart/form-data) for profile picture and resume
 export const uploadProfilePicture = asyncHandler(async (req: AuthRequest & { file?: Express.Multer.File }, res: Response) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file provided' });
@@ -240,7 +250,9 @@ export const uploadProfilePicture = asyncHandler(async (req: AuthRequest & { fil
   const { uid } = req.user;
   const publicUrl = `/uploads/${req.file.filename}`;
   const downloadUrl = `/v1/file/download/${req.file.filename}`;
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const forwardedProto = (req.headers['x-forwarded-proto'] as string) || '';
+  const proto = forwardedProto.split(',')[0] || req.protocol;
+  const baseUrl = `${proto}://${req.get('host')}`;
 
   await User.findOneAndUpdate(
     { firebaseUid: uid },
@@ -251,8 +263,12 @@ export const uploadProfilePicture = asyncHandler(async (req: AuthRequest & { fil
   res.status(201).json({
     success: true,
     message: 'Profile picture uploaded',
+    url: publicUrl,
+    publicUrl,
+    absoluteUrl: `${baseUrl}${publicUrl}`,
     data: {
       url: publicUrl,
+      publicUrl,
       absoluteUrl: `${baseUrl}${publicUrl}`,
       downloadUrl,
       filename: req.file.filename,
@@ -269,7 +285,9 @@ export const uploadResume = asyncHandler(async (req: AuthRequest & { file?: Expr
   const { uid } = req.user;
   const publicUrl = `/uploads/${req.file.filename}`;
   const downloadUrl = `/v1/file/download/${req.file.filename}`;
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const forwardedProto = (req.headers['x-forwarded-proto'] as string) || '';
+  const proto = forwardedProto.split(',')[0] || req.protocol;
+  const baseUrl = `${proto}://${req.get('host')}`;
 
   await User.findOneAndUpdate(
     { firebaseUid: uid },
@@ -280,8 +298,12 @@ export const uploadResume = asyncHandler(async (req: AuthRequest & { file?: Expr
   res.status(201).json({
     success: true,
     message: 'Resume uploaded',
+    url: publicUrl,
+    publicUrl,
+    absoluteUrl: `${baseUrl}${publicUrl}`,
     data: {
       url: publicUrl,
+      publicUrl,
       absoluteUrl: `${baseUrl}${publicUrl}`,
       downloadUrl,
       filename: req.file.filename,
@@ -289,4 +311,11 @@ export const uploadResume = asyncHandler(async (req: AuthRequest & { file?: Expr
       size: req.file.size,
     },
   });
+});
+
+export const updateHeadline = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const { headline } = req.body as { headline?: string };
+  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { headline: headline || '' } }, { new: true });
+  res.status(200).json({ success: true, message: 'Headline updated' });
 });

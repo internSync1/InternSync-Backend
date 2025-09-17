@@ -17,13 +17,18 @@ export const uploadFile = asyncHandler(async (req: Request, res: Response, next:
 
     const publicUrl = `/uploads/${req.file.filename}`;
     const downloadUrl = `/v1/file/download/${req.file.filename}`;
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const forwardedProto = (req.headers['x-forwarded-proto'] as string) || '';
+    const proto = forwardedProto.split(',')[0] || req.protocol;
+    const baseUrl = `${proto}://${req.get('host')}`;
 
     res.status(201).json({
         success: true,
         message: 'File uploaded successfully',
+        url: publicUrl,
+        publicUrl,
         data: {
             url: publicUrl,
+            publicUrl,
             downloadUrl,
             absoluteUrl: `${baseUrl}${publicUrl}`,
             filename: req.file.filename,
