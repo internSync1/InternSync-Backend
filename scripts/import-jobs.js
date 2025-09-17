@@ -56,6 +56,7 @@ const jobSchema = new mongoose.Schema({
     relevancyScore: { type: Number, default: 0 },
     tags: [String],
     categories: [String],
+    skillsRequired: [String],
     sourceUrl: String,
     source: String,
     prize: String,
@@ -84,25 +85,25 @@ function parseCSVField(field) {
     return field.replace(/^"|"$/g, '');
 }
 
-function parseSalary(salaryStr, amountStr, prizeStr) {
-    let currency = 'USD';
-    let amount = 0;
-    
-    if (salaryStr && salaryStr !== '""') {
-        const match = salaryStr.match(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)/);
-        if (match) {
-            amount = parseFloat(match[1].replace(/,/g, ''));
-        }
+// Parse arrays that may be JSON (double-quoted) or python-like (single-quoted), or comma-separated strings
+function parseFlexibleArray(field) {
+    if (field == null) return [];
+    let s = String(field).trim();
+    // Strip outer quotes if present
+    if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+        s = s.slice(1, -1).trim();
     }
-    
-    if (amountStr && amountStr !== '""') {
-        const match = amountStr.match(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)/);
-        if (match) {
-            amount = parseFloat(match[1].replace(/,/g, ''));
-        }
+    if (s.startsWith('[') && s.endsWith(']')) {
+        // Try strict JSON first
+        try { return JSON.parse(s); } catch (_) {}
+        // Replace single quotes with double quotes and try again
+        try { return JSON.parse(s.replace(/'/g, '"')); } catch (_) {}
+        // Fallback: split by commas and strip quotes/spaces
+        const inner = s.slice(1, -1);
+        return inner.split(',').map(x => x.replace(/^\s*["']?|["']?\s*$/g, '').trim()).filter(Boolean);
     }
-    
-    return { currency, amount };
+    if (!s) return [];
+    return s.split(',').map(x => x.replace(/^\s*["']?|["']?\s*$/g, '').trim()).filter(Boolean);
 }
 
 // Normalize CSV 'type' to canonical set: internship | scholarship | extracurricular | activity
@@ -169,21 +170,23 @@ async function importJobs() {
     try {
         console.log('Starting job import from CSV...');
         
-        // Clear existing jobs (optional - remove this line if you want to keep existing data)
-        // await Job.deleteMany({});
+        // Clear existing jobs (CSV imports only)
+        await Job.deleteMany({ sourceType: 'csv' });
+        console.log('Cleared existing CSV-sourced jobs');
         
         const jobs = [];
         
-        fs.createReadStream('./opportunities (3).csv')
+        fs.createReadStream('./opportunities_with_categories_v2.csv')
             .pipe(csv())
             .on('data', (row) => {
                 try {
                     const stipend = parseSalary(row.salary, row.amount, row.prize);
-                    const tags = parseCSVField(row.tags) || [];
-                    const categoriesFromCsv = parseCSVField(row.categories) || [];
-                    const requirements = parseCSVField(row.requirements) || [];
+                    const tags = parseFlexibleArray(row.tags);
+                    const categoriesFromCsv = parseFlexibleArray(row.categories);
+                    const requirements = parseFlexibleArray(row.requirements);
                     const normalizedType = normalizeType(row.type || row.category || row.categories);
-                    const normalizedCategories = deriveCategories(normalizedType, categoriesFromCsv, tags);
+                    // Use detailed categories from CSV directly (deduped)
+                    const normalizedCategories = Array.from(new Set((categoriesFromCsv || []).map(s => String(s).trim()).filter(Boolean)));
                     
                     const job = {
                         _id: uuidv4(),
