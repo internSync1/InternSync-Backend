@@ -279,17 +279,35 @@ const swaggerDocument: any = {
           "data": { "type": "array", "items": { "$ref": "#/components/schemas/Question" } }
         }
       },
+      "MediaUrlPayload": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "example": "/uploads/generated-file-name.png" },
+          "publicUrl": { "type": "string", "example": "/uploads/generated-file-name.png" },
+          "absoluteUrl": { "type": "string", "example": "https://api.example.com/uploads/generated-file-name.png" }
+        }
+      },
       "FileUploadResponse": {
         "type": "object",
         "properties": {
           "success": { "type": "boolean", "example": true },
-          "filename": { "type": "string", "example": "generated-file-name.pdf" },
-          "originalName": { "type": "string", "example": "resume.pdf" },
-          "mimeType": { "type": "string", "example": "application/pdf" },
-          "size": { "type": "number", "example": 1024000 },
-          "url": { "type": "string", "example": "/uploads/generated-file-name.pdf" },
-          "downloadUrl": { "type": "string", "example": "/v1/file/download/generated-file-name.pdf" },
-          "absoluteUrl": { "type": "string", "example": "https://example.com/uploads/generated-file-name.pdf" }
+          "message": { "type": "string", "example": "File uploaded successfully" },
+          "url": { "type": "string", "example": "/uploads/generated-file-name.png" },
+          "publicUrl": { "type": "string", "example": "/uploads/generated-file-name.png" },
+          "absoluteUrl": { "type": "string", "example": "https://api.example.com/uploads/generated-file-name.png" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string", "example": "/uploads/generated-file-name.png" },
+              "publicUrl": { "type": "string", "example": "/uploads/generated-file-name.png" },
+              "absoluteUrl": { "type": "string", "example": "https://api.example.com/uploads/generated-file-name.png" },
+              "downloadUrl": { "type": "string", "example": "/v1/file/download/generated-file-name.png" },
+              "filename": { "type": "string", "example": "generated-file-name.png" },
+              "originalname": { "type": "string", "example": "photo.png" },
+              "mimetype": { "type": "string", "example": "image/png" },
+              "size": { "type": "number", "example": 1024000 }
+            }
+          }
         }
       },
       "SuccessMessageResponse": {
@@ -1610,7 +1628,26 @@ const swaggerDocument: any = {
           }
         }
       },
-      "responses": { "200": { "description": "Profile picture updated" } }
+      "responses": {
+        "200": {
+          "description": "Profile picture updated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "success": { "type": "boolean", "example": true },
+                  "message": { "type": "string", "example": "Profile picture updated" },
+                  "url": { "type": "string", "example": "/uploads/pic.png" },
+                  "publicUrl": { "type": "string", "example": "/uploads/pic.png" },
+                  "absoluteUrl": { "type": "string", "example": "https://api.example.com/uploads/pic.png" },
+                  "data": { "$ref": "#/components/schemas/MediaUrlPayload" }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "/v1/user/resume": {
@@ -1626,7 +1663,26 @@ const swaggerDocument: any = {
           }
         }
       },
-      "responses": { "200": { "description": "Resume URL updated" } }
+      "responses": {
+        "200": {
+          "description": "Resume URL updated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "success": { "type": "boolean", "example": true },
+                  "message": { "type": "string", "example": "Resume URL updated" },
+                  "url": { "type": "string", "example": "/uploads/resume.pdf" },
+                  "publicUrl": { "type": "string", "example": "/uploads/resume.pdf" },
+                  "absoluteUrl": { "type": "string", "example": "https://api.example.com/uploads/resume.pdf" },
+                  "data": { "$ref": "#/components/schemas/MediaUrlPayload" }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "/v1/user/headline": {
@@ -1650,7 +1706,7 @@ const swaggerDocument: any = {
     "post": {
       "tags": ["User Profile"],
       "summary": "Upload profile picture (multipart/form-data)",
-      "description": "Accepts image file (jpg, jpeg, png, gif, webp) and stores it. Returns URL to use in profile.",
+      "description": "Accepts image file (jpg, jpeg, png, gif, webp); returns public URL fields.",
       "security": [{ "BearerAuth": [] }],
       "requestBody": {
         "required": true,
@@ -1659,21 +1715,30 @@ const swaggerDocument: any = {
             "schema": {
               "type": "object",
               "properties": {
-                "file": { "type": "string", "format": "binary", "description": "Image file (jpg, jpeg, png, gif, webp), max 10MB" }
+                "file": { "type": "string", "format": "binary" }
               },
               "required": ["file"]
             }
           }
         }
       },
-      "responses": { "201": { "description": "Profile picture uploaded", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FileUploadResponse" } } } } }
+      "responses": {
+        "201": {
+          "description": "Profile picture uploaded",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/FileUploadResponse" }
+            }
+          }
+        }
+      }
     }
   },
   "/v1/user/upload/resume": {
     "post": {
       "tags": ["User Profile"],
       "summary": "Upload resume (multipart/form-data)",
-      "description": "Accepts PDF or DOC/DOCX resume file and stores it. Returns URL to save in user profile.",
+      "description": "Accepts PDF or DOC/DOCX; returns public URL fields.",
       "security": [{ "BearerAuth": [] }],
       "requestBody": {
         "required": true,
@@ -1682,14 +1747,23 @@ const swaggerDocument: any = {
             "schema": {
               "type": "object",
               "properties": {
-                "file": { "type": "string", "format": "binary", "description": "PDF or DOC/DOCX file, max 10MB" }
+                "file": { "type": "string", "format": "binary" }
               },
               "required": ["file"]
             }
           }
         }
       },
-      "responses": { "201": { "description": "Resume uploaded", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FileUploadResponse" } } } } }
+      "responses": {
+        "201": {
+          "description": "Resume uploaded",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/FileUploadResponse" }
+            }
+          }
+        }
+      }
     }
   }
 }
