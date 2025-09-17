@@ -4,9 +4,25 @@ const csv = require('csv-parser');
 const { v4: uuidv4 } = require('uuid');
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/internship-platform', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+const mongoUri = process.env.MONGODB_URL;
+if (!mongoUri) {
+    console.error('Error: MONGODB_URL environment variable is not set');
+    process.exit(1);
+}
+console.log('Connecting to MongoDB:', mongoUri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@')); // Hide credentials
+
+mongoose.connect(mongoUri, {
+    serverSelectionTimeoutMS: 30000,
+    socketTimeoutMS: 45000,
+});
+
+mongoose.connection.on('connected', () => {
+    console.log('MongoDB connected successfully');
+});
+
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB connection error:', err.message);
+    process.exit(1);
 });
 
 // Job Schema (matching your existing model)
@@ -106,6 +122,27 @@ function parseFlexibleArray(field) {
     return s.split(',').map(x => x.replace(/^\s*["']?|["']?\s*$/g, '').trim()).filter(Boolean);
 }
 
+function parseSalary(salaryStr, amountStr, prizeStr) {
+    let currency = 'USD';
+    let amount = 0;
+    
+    if (salaryStr && salaryStr !== '""') {
+        const match = salaryStr.match(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)/);
+        if (match) {
+            amount = parseFloat(match[1].replace(/,/g, ''));
+        }
+    }
+    
+    if (amountStr && amountStr !== '""') {
+        const match = amountStr.match(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)/);
+        if (match) {
+            amount = parseFloat(match[1].replace(/,/g, ''));
+        }
+    }
+    
+    return { currency, amount };
+}
+
 // Normalize CSV 'type' to canonical set: internship | scholarship | extracurricular | activity
 function normalizeType(raw) {
     const s = (parseCSVField(raw) || '').toString().trim().toLowerCase();
@@ -150,8 +187,7 @@ function deriveCategories(normalizedType, existingCategories = [], tags = []) {
         add('Volunteer');
         add('Volunteering');
     }
-    // Optionally keep any helpful tags as categories if provided in CSV
-    // (We avoid over-inflating categories; keep to core labels.)
+
     return Array.from(set);
 }
 
