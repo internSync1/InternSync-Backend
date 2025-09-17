@@ -225,3 +225,62 @@ export const updateHeadline = asyncHandler(async (req: AuthRequest, res: Respons
   await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { headline: headline || '' } }, { new: true });
   res.status(200).json({ success: true, message: 'Headline updated' });
 });
+
+// Direct upload handlers (multipart/form-data) for profile picture and resume
+export const uploadProfilePicture = asyncHandler(async (req: AuthRequest & { file?: Express.Multer.File }, res: Response) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'No file provided' });
+  }
+  const { uid } = req.user;
+  const publicUrl = `/uploads/${req.file.filename}`;
+  const downloadUrl = `/v1/file/download/${req.file.filename}`;
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+  await User.findOneAndUpdate(
+    { firebaseUid: uid },
+    { $set: { profilePicture: publicUrl } },
+    { new: true }
+  );
+
+  res.status(201).json({
+    success: true,
+    message: 'Profile picture uploaded',
+    data: {
+      url: publicUrl,
+      absoluteUrl: `${baseUrl}${publicUrl}`,
+      downloadUrl,
+      filename: req.file.filename,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    },
+  });
+});
+
+export const uploadResume = asyncHandler(async (req: AuthRequest & { file?: Express.Multer.File }, res: Response) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'No file provided' });
+  }
+  const { uid } = req.user;
+  const publicUrl = `/uploads/${req.file.filename}`;
+  const downloadUrl = `/v1/file/download/${req.file.filename}`;
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+  await User.findOneAndUpdate(
+    { firebaseUid: uid },
+    { $set: { resumeUrl: publicUrl } },
+    { new: true }
+  );
+
+  res.status(201).json({
+    success: true,
+    message: 'Resume uploaded',
+    data: {
+      url: publicUrl,
+      absoluteUrl: `${baseUrl}${publicUrl}`,
+      downloadUrl,
+      filename: req.file.filename,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    },
+  });
+});

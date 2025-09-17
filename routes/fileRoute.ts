@@ -20,21 +20,21 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 1024 * 1024 * 5 },
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
     fileFilter: function (req, file, cb) {
         checkFileType(file, cb);
     }
 });
 
 function checkFileType(file: Express.Multer.File, cb: multer.FileFilterCallback) {
-    const filetypes = /jpeg|jpg|png|gif|pdf/;
+    const filetypes = /jpeg|jpg|png|gif|webp|pdf|doc|docx/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = filetypes.test(file.mimetype);
+    const mimetype = filetypes.test(file.mimetype.toLowerCase());
 
     if (mimetype && extname) {
         return cb(null, true);
     } else {
-        cb(new Error('Error: Images and PDFs Only!'));
+        cb(new Error('Error: Allowed types are images (jpg,jpeg,png,gif,webp) and pdf/doc/docx'));
     }
 }
 

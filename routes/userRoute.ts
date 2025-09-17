@@ -14,8 +14,12 @@ import {
   updateProfilePicture,
   updateResumeUrl,
   updateHeadline,
+  uploadProfilePicture,
+  uploadResume,
 } from "../controllers/userController";
 import { firebaseAuth } from "../common/middleware/firebaseAuth";
+import multer from "multer";
+import path from "path";
 import { Request } from "express";
 
 const router = express.Router();
@@ -46,5 +50,38 @@ router.put('/resume', firebaseAuth, (req: Request, res, next) => updateResumeUrl
 
 // Headline (user-visible role)
 router.put('/headline', firebaseAuth, (req: Request, res, next) => updateHeadline(req as any, res, next));
+
+// Multer setup for direct user uploads (images, pdf, doc/x)
+const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, UPLOAD_DIR);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now();
+    cb(null, file.originalname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+function checkFileType(file: Express.Multer.File, cb: multer.FileFilterCallback) {
+  const filetypes = /jpeg|jpg|png|gif|webp|pdf|doc|docx/;
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = filetypes.test(file.mimetype.toLowerCase());
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb(new Error('Error: Allowed types are images (jpg,jpeg,png,gif,webp) and pdf/doc/docx'));
+  }
+}
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => checkFileType(file, cb)
+});
+
+// Direct upload endpoints (multipart/form-data)
+router.post('/upload/profile-picture', firebaseAuth, upload.single('file'), (req: Request, res, next) => uploadProfilePicture(req as any, res, next));
+router.post('/upload/resume', firebaseAuth, upload.single('file'), (req: Request, res, next) => uploadResume(req as any, res, next));
 
 export default router;

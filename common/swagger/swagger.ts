@@ -1482,7 +1482,14 @@ const swaggerDocument: any = {
       "tags": ["User Profile"],
       "summary": "Update about me",
       "security": [{ "BearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "aboutMe": { "type": "string" } }, "required": ["aboutMe"] } } } },
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "aboutMe": { "type": "string" } }, "required": ["aboutMe"] }
+          }
+        }
+      },
       "responses": { "200": { "description": "About me updated" } }
     }
   },
@@ -1491,7 +1498,14 @@ const swaggerDocument: any = {
       "tags": ["User Profile"],
       "summary": "Add work experience",
       "security": [{ "BearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "jobTitle": { "type": "string" }, "company": { "type": "string" }, "startDate": { "type": "string", "format": "date" }, "endDate": { "type": "string", "format": "date" }, "current": { "type": "boolean" }, "description": { "type": "string" } }, "required": ["jobTitle", "company", "startDate"] } } } },
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "jobTitle": { "type": "string" }, "company": { "type": "string" }, "startDate": { "type": "string", "format": "date" }, "endDate": { "type": "string", "format": "date" }, "current": { "type": "boolean" }, "description": { "type": "string" } }, "required": ["jobTitle", "company", "startDate"] }
+          }
+        }
+      },
       "responses": { "201": { "description": "Work experience added" } }
     }
   },
@@ -1501,7 +1515,14 @@ const swaggerDocument: any = {
       "summary": "Update work experience",
       "security": [{ "BearerAuth": [] }],
       "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
-      "requestBody": { "required": false, "content": { "application/json": { "schema": { "type": "object", "properties": { "jobTitle": { "type": "string" }, "company": { "type": "string" }, "startDate": { "type": "string", "format": "date" }, "endDate": { "type": "string", "format": "date" }, "current": { "type": "boolean" }, "description": { "type": "string" } } } } } },
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "jobTitle": { "type": "string" }, "company": { "type": "string" }, "startDate": { "type": "string", "format": "date" }, "endDate": { "type": "string", "format": "date" }, "current": { "type": "boolean" }, "description": { "type": "string" } } }
+          }
+        }
+      },
       "responses": { "200": { "description": "Work experience updated" } }
     },
     "delete": {
@@ -1517,7 +1538,14 @@ const swaggerDocument: any = {
       "tags": ["User Profile"],
       "summary": "Update skills",
       "security": [{ "BearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "skills": { "type": "array", "items": { "type": "string" } } }, "required": ["skills"] } } } },
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "skills": { "type": "array", "items": { "type": "string" } } }, "required": ["skills"] }
+          }
+        }
+      },
       "responses": { "200": { "description": "Skills updated" } }
     }
   },
@@ -1526,7 +1554,14 @@ const swaggerDocument: any = {
       "tags": ["User Profile"],
       "summary": "Update languages",
       "security": [{ "BearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "languages": { "type": "array", "items": { "type": "string" } } }, "required": ["languages"] } } } },
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "languages": { "type": "array", "items": { "type": "string" } } }, "required": ["languages"] }
+          }
+        }
+      },
       "responses": { "200": { "description": "Languages updated" } }
     }
   },
@@ -1535,7 +1570,14 @@ const swaggerDocument: any = {
       "tags": ["User Profile"],
       "summary": "Update education",
       "security": [{ "BearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "education": { "type": "array", "items": { "type": "string" } } }, "required": ["education"] } } } },
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "education": { "type": "array", "items": { "type": "string" } } }, "required": ["education"] }
+          }
+        }
+      },
       "responses": { "200": { "description": "Education updated" } }
     }
   },
@@ -1544,7 +1586,14 @@ const swaggerDocument: any = {
       "tags": ["User Profile"],
       "summary": "Update appreciation",
       "security": [{ "BearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "appreciation": { "type": "array", "items": { "type": "string" } } }, "required": ["appreciation"] } } } },
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "appreciation": { "type": "array", "items": { "type": "string" } } }, "required": ["appreciation"] }
+          }
+        }
+      },
       "responses": { "200": { "description": "Appreciation updated" } }
     }
   },
@@ -1553,7 +1602,14 @@ const swaggerDocument: any = {
       "tags": ["User Profile"],
       "summary": "Update profile picture URL",
       "security": [{ "BearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "profilePicture": { "type": "string" }, "url": { "type": "string" } } } } } },
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "profilePicture": { "type": "string" }, "url": { "type": "string" } } }
+          }
+        }
+      },
       "responses": { "200": { "description": "Profile picture updated" } }
     }
   },
@@ -1562,7 +1618,14 @@ const swaggerDocument: any = {
       "tags": ["User Profile"],
       "summary": "Update resume URL",
       "security": [{ "BearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "resumeUrl": { "type": "string" }, "url": { "type": "string" } } } } } },
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "resumeUrl": { "type": "string" }, "url": { "type": "string" } } }
+          }
+        }
+      },
       "responses": { "200": { "description": "Resume URL updated" } }
     }
   },
@@ -1581,6 +1644,52 @@ const swaggerDocument: any = {
         }
       },
       "responses": { "200": { "description": "Headline updated" } }
+    }
+  },
+  "/v1/user/upload/profile-picture": {
+    "post": {
+      "tags": ["User Profile"],
+      "summary": "Upload profile picture (multipart/form-data)",
+      "description": "Accepts image file (jpg, jpeg, png, gif, webp) and stores it. Returns URL to use in profile.",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "file": { "type": "string", "format": "binary", "description": "Image file (jpg, jpeg, png, gif, webp), max 10MB" }
+              },
+              "required": ["file"]
+            }
+          }
+        }
+      },
+      "responses": { "201": { "description": "Profile picture uploaded", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FileUploadResponse" } } } } }
+    }
+  },
+  "/v1/user/upload/resume": {
+    "post": {
+      "tags": ["User Profile"],
+      "summary": "Upload resume (multipart/form-data)",
+      "description": "Accepts PDF or DOC/DOCX resume file and stores it. Returns URL to save in user profile.",
+      "security": [{ "BearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "file": { "type": "string", "format": "binary", "description": "PDF or DOC/DOCX file, max 10MB" }
+              },
+              "required": ["file"]
+            }
+          }
+        }
+      },
+      "responses": { "201": { "description": "Resume uploaded", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FileUploadResponse" } } } } }
     }
   }
 }
