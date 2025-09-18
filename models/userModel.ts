@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import { IUserDocument, WorkExperience } from "../types/userType";
+import { IUserDocument, WorkExperience, Education, Appreciation } from "../types/userType";
 import { UserRole } from "../constant/userRoles";
 
 const WorkExperienceSchema = new Schema<WorkExperience>({
@@ -10,6 +10,26 @@ const WorkExperienceSchema = new Schema<WorkExperience>({
   endDate: Date,
   current: Boolean,
   description: String,
+});
+
+const EducationSchema = new Schema<Education>({
+  institution: { type: String, required: true, trim: true },
+  degree: { type: String, trim: true },
+  fieldOfStudy: { type: String, trim: true },
+  startDate: Date,
+  endDate: Date,
+  current: Boolean,
+  grade: { type: String, trim: true },
+  location: { type: String, trim: true },
+  description: { type: String, trim: true },
+});
+
+const AppreciationSchema = new Schema<Appreciation>({
+  title: { type: String, required: true, trim: true },
+  issuer: { type: String, trim: true },
+  date: Date,
+  description: { type: String, trim: true },
+  url: { type: String, trim: true },
 });
 
 const UserSchema = new Schema<IUserDocument>(
@@ -76,10 +96,10 @@ const UserSchema = new Schema<IUserDocument>(
     aboutMe: { type: String, default: "" },
     resumeUrl: { type: String, default: "" },
     workExperience: [WorkExperienceSchema],
-    education: [{ type: String }],
+    education: [EducationSchema],
     skills: [{ type: String }],
     languages: [{ type: String }],
-    appreciation: [{ type: String }],
+    appreciation: [AppreciationSchema],
   },
   { timestamps: true, versionKey: false }
 );

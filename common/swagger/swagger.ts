@@ -52,10 +52,10 @@ const swaggerDocument: any = {
             "type": "array",
             "items": { "$ref": "#/components/schemas/WorkExperience" }
           },
-          "education": { "type": "array", "items": { "type": "string" } },
+          "education": { "type": "array", "items": { "$ref": "#/components/schemas/Education" } },
           "skills": { "type": "array", "items": { "type": "string" } },
           "languages": { "type": "array", "items": { "type": "string" } },
-          "appreciation": { "type": "array", "items": { "type": "string" } },
+          "appreciation": { "type": "array", "items": { "$ref": "#/components/schemas/Appreciation" } },
           "gender": { "type": "string", "example": "female" },
           "dateOfBirth": { "type": "string", "format": "date" },
           "isActive": { "type": "boolean", "example": true },
@@ -75,6 +75,32 @@ const swaggerDocument: any = {
           "current": { "type": "boolean", "example": false },
           "description": { "type": "string", "example": "Worked on mobile app" }
         }
+      },
+      "Education": {
+        "type": "object",
+        "properties": {
+          "institution": { "type": "string", "example": "University of Oxford" },
+          "degree": { "type": "string", "example": "BSc" },
+          "fieldOfStudy": { "type": "string", "example": "Information Technology" },
+          "startDate": { "type": "string", "format": "date", "example": "2019-09-01" },
+          "endDate": { "type": "string", "format": "date", "nullable": true, "example": "2023-08-31" },
+          "current": { "type": "boolean", "example": false },
+          "grade": { "type": "string", "example": "3.8 GPA" },
+          "location": { "type": "string", "example": "Oxford, UK" },
+          "description": { "type": "string", "example": "Coursework in systems, AI, and UX." }
+        },
+        "required": ["institution"]
+      },
+      "Appreciation": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "Wireless Symposium (WS)" },
+          "issuer": { "type": "string", "example": "Young Scientists" },
+          "date": { "type": "string", "format": "date", "example": "2024-06-01" },
+          "description": { "type": "string", "example": "Awarded for best poster on 5G systems" },
+          "url": { "type": "string", "example": "https://example.com/certificates/ws-2024" }
+        },
+        "required": ["title"]
       },
       "JobCompany": {
         "type": "object",
@@ -1592,7 +1618,11 @@ const swaggerDocument: any = {
         "required": true,
         "content": {
           "application/json": {
-            "schema": { "type": "object", "properties": { "education": { "type": "array", "items": { "type": "string" } } }, "required": ["education"] }
+            "schema": {
+              "type": "object",
+              "properties": { "education": { "type": "array", "items": { "$ref": "#/components/schemas/Education" } } },
+              "required": ["education"]
+            }
           }
         }
       },
@@ -1608,7 +1638,11 @@ const swaggerDocument: any = {
         "required": true,
         "content": {
           "application/json": {
-            "schema": { "type": "object", "properties": { "appreciation": { "type": "array", "items": { "type": "string" } } }, "required": ["appreciation"] }
+            "schema": {
+              "type": "object",
+              "properties": { "appreciation": { "type": "array", "items": { "$ref": "#/components/schemas/Appreciation" } } },
+              "required": ["appreciation"]
+            }
           }
         }
       },

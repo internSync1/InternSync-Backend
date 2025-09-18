@@ -1,11 +1,49 @@
 import { Request, Response, NextFunction } from "express";
 import asyncHandler from "../common/middleware/async";
 import User from "../models/userModel";
+import { Education, Appreciation } from "../types/userType";
 
 // Extend Request to include user property and auth status
 interface AuthRequest extends Request {
   user: any;
   authStatus?: 'valid' | 'expired' | 'missing';
+}
+
+// Helpers to normalize complex arrays from client payloads
+function parseDateSafe(val: any): Date | undefined {
+  if (!val) return undefined;
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? undefined : d;
+}
+
+function normalizeEducationArray(input: any[]): Education[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((e: any) => ({
+      institution: String(e?.institution ?? e?.school ?? '').trim(),
+      degree: e?.degree ? String(e.degree) : undefined,
+      fieldOfStudy: e?.fieldOfStudy ? String(e.fieldOfStudy) : (e?.field ? String(e.field) : undefined),
+      startDate: parseDateSafe(e?.startDate),
+      endDate: parseDateSafe(e?.endDate),
+      current: typeof e?.current === 'boolean' ? e.current : !!e?.current,
+      grade: e?.grade ? String(e.grade) : undefined,
+      location: e?.location ? String(e.location) : undefined,
+      description: e?.description ? String(e.description) : undefined,
+    }))
+    .filter((e: Education) => !!e.institution);
+}
+
+function normalizeAppreciationArray(input: any[]): Appreciation[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((a: any) => ({
+      title: String(a?.title ?? a?.name ?? '').trim(),
+      issuer: a?.issuer ? String(a.issuer) : undefined,
+      date: parseDateSafe(a?.date ?? a?.year),
+      description: a?.description ? String(a.description) : undefined,
+      url: a?.url ? String(a.url) : undefined,
+    }))
+    .filter((a: Appreciation) => !!a.title);
 }
 
 // Sync user with Firebase UID and email
@@ -93,10 +131,10 @@ export const updateUserProfile = asyncHandler(
       ...(answers && { answers }),
       ...(aboutMe && { aboutMe }),
       ...(resolvedResumeUrl && { resumeUrl: resolvedResumeUrl }),
-      ...(education && { education }),
+      ...(Array.isArray(education) && { education: normalizeEducationArray(education as any[]) }),
       ...(skills && { skills }),
       ...(languages && { languages }),
-      ...(appreciation && { appreciation }),
+      ...(Array.isArray(appreciation) && { appreciation: normalizeAppreciationArray(appreciation as any[]) }),
       ...(workExperience && { workExperience }),
     };
     await User.findOneAndUpdate({ firebaseUid: uid }, fieldsToUpdate, {
@@ -120,7 +158,6 @@ export const getUserProfile = asyncHandler(
     });
   }
 );
-
 
 export const updateAboutMe = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { uid } = req.user;
@@ -191,16 +228,24 @@ export const updateLanguages = asyncHandler(async (req: AuthRequest, res: Respon
 
 export const updateEducation = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { uid } = req.user;
-  const { education } = req.body as { education?: string[] };
-  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { education: Array.isArray(education) ? education : [] } }, { new: true });
-  res.status(200).json({ success: true, message: 'Education updated' });
+  const { education } = req.body as { education?: any[] };
+  if (!Array.isArray(education)) {
+    return res.status(400).json({ success: false, message: 'education must be an array of objects' });
+  }
+  const normalized = normalizeEducationArray(education);
+  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { education: normalized } }, { new: true });
+  res.status(200).json({ success: true, message: 'Education updated', data: normalized });
 });
 
 export const updateAppreciation = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { uid } = req.user;
-  const { appreciation } = req.body as { appreciation?: string[] };
-  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { appreciation: Array.isArray(appreciation) ? appreciation : [] } }, { new: true });
-  res.status(200).json({ success: true, message: 'Appreciation updated' });
+  const { appreciation } = req.body as { appreciation?: any[] };
+  if (!Array.isArray(appreciation)) {
+    return res.status(400).json({ success: false, message: 'appreciation must be an array of objects' });
+  }
+  const normalized = normalizeAppreciationArray(appreciation);
+  await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { appreciation: normalized } }, { new: true });
+  res.status(200).json({ success: true, message: 'Appreciation updated', data: normalized });
 });
 
 export const updateProfilePicture = asyncHandler(async (req: AuthRequest, res: Response) => {

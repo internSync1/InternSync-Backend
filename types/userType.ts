@@ -10,6 +10,26 @@ export interface WorkExperience {
   description?: string;
 }
 
+export interface Education {
+  institution: string; // e.g., University of Oxford
+  degree?: string; // e.g., BSc, MSc
+  fieldOfStudy?: string; // e.g., Information Technology
+  startDate?: Date;
+  endDate?: Date;
+  current?: boolean;
+  grade?: string; // GPA or grade
+  location?: string;
+  description?: string;
+}
+
+export interface Appreciation {
+  title: string; // e.g., Wireless Symposium (WS)
+  issuer?: string; // e.g., Young Scientists
+  date?: Date; // award/certification date
+  description?: string;
+  url?: string; // reference link or certificate URL
+}
+
 export interface IUserDocument extends Document {
   firebaseUid: string;
   firstName: string;
@@ -44,8 +64,8 @@ export interface IUserDocument extends Document {
   aboutMe: string;
   resumeUrl?: string;
   workExperience: WorkExperience[];
-  education: string[];
+  education: Education[];
   skills: string[];
   languages: string[];
-  appreciation: string[];
+  appreciation: Appreciation[];
 }
