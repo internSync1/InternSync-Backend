@@ -17,7 +17,6 @@ export const firebaseAuth: RequestHandler = (req: AuthenticatedRequest, res: Res
   const idToken = authHeader.split(' ')[1];
   admin.auth().verifyIdToken(idToken)
     .then(async (decodedToken) => {
-      req.user = decodedToken;
       try {
         const { uid } = decodedToken as any;
         // Only find existing user, don't create new ones
@@ -28,6 +27,13 @@ export const firebaseAuth: RequestHandler = (req: AuthenticatedRequest, res: Res
             requiresVerification: true
           });
         }
+        // Attach both Firebase token and DB user context
+        req.user = {
+          ...decodedToken,
+          id: user._id,
+          role: (user as any).role,
+          email: decodedToken.email ?? (user as any).email,
+        };
       } catch (e) {
         return res.status(500).json({ message: 'Failed to verify user', error: e instanceof Error ? e.message : e });
       }
@@ -60,6 +66,10 @@ export const lazyFirebaseAuth: RequestHandler = (req: AuthenticatedRequest, res:
         const user = await User.findOne({ firebaseUid: uid });
         if (!user) {
           req.authStatus = 'unverified';
+        } else {
+          // Attach DB user id for convenience when present
+          (req.user as any).id = user._id;
+          (req.user as any).role = (user as any).role;
         }
       } catch (e) {
         console.error('Failed to check user in lazy auth:', e);
@@ -88,6 +98,14 @@ export const optionalFirebaseAuth: RequestHandler = (req: AuthenticatedRequest, 
   admin.auth().verifyIdToken(idToken)
     .then(async (decodedToken) => {
       req.user = decodedToken;
+      try {
+        const { uid } = decodedToken as any;
+        const user = await User.findOne({ firebaseUid: uid });
+        if (user) {
+          (req.user as any).id = user._id;
+          (req.user as any).role = (user as any).role;
+        }
+      } catch { }
       next();
     })
     .catch(() => {

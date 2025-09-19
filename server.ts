@@ -46,6 +46,11 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use('/', routeManager)
 
+// JSON 404 for any unmatched route (avoid default HTML response)
+app.use((req: Request, res: Response) => {
+  res.status(404).json({ success: false, message: 'Route not found', path: req.originalUrl });
+});
+
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const status = err.statusCode || 500;
 

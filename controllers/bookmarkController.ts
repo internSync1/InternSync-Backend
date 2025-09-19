@@ -35,6 +35,6 @@ export const removeBookmark = asyncHandler(async (req: ProtectedRequest, res: Re
 });
 
 export const getUserBookmarks = asyncHandler(async (req: ProtectedRequest, res: Response, next: NextFunction) => {
-    const bookmarks = await Bookmark.find({ userId: req.user.id }).populate('jobId', 'designation company location status');
+    const bookmarks = await Bookmark.find({ userId: req.user.id }).populate('jobId', 'title company location status');
     res.status(200).json({ success: true, count: bookmarks.length, data: bookmarks });
 });
