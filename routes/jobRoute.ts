@@ -6,7 +6,10 @@ import {
     updateJob,
     deleteJob,
     closeJob,
-    getJobDetails
+    getJobDetails,
+    listInternships,
+    listScholarships,
+    listExtracurriculars
 } from "../controllers/jobController";
 import { firebaseAuth } from "../common/middleware/firebaseAuth";
 import { authorize } from "../common/middleware/auth";
@@ -18,6 +21,9 @@ const router = Router();
 
 // Public routes
 router.get("/", getAllJobs);
+router.get("/internships", listInternships);
+router.get("/scholarships", listScholarships);
+router.get("/extracurriculars", listExtracurriculars);
 router.get("/:id", getJobById);
 
 // Admin routes

@@ -224,6 +224,17 @@ export const getAllJobs = asyncHandler(
     }
 );
 
+function wrapListByType(forcedType: 'internship' | 'scholarship' | 'extracurricular') {
+    return (req: Request, res: Response, next: NextFunction) => {
+        (req.query as any).type = forcedType;
+        return (getAllJobs as any)(req, res, next);
+    };
+}
+
+export const listInternships = wrapListByType('internship');
+export const listScholarships = wrapListByType('scholarship');
+export const listExtracurriculars = wrapListByType('extracurricular');
+
 export const getJobById = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const jobId = req.params.id;

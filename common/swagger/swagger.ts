@@ -864,7 +864,111 @@ const swaggerDocument: any = {
         }
       }
     },
-
+    "/v1/job/internships": {
+      "get": {
+        "tags": ["Jobs"],
+        "summary": "List internships",
+        "description": "Retrieves internships. Equivalent to GET /v1/job?type=internship.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "in": "query", "name": "freeText", "schema": { "type": "string" } },
+          { "in": "query", "name": "pageNo", "schema": { "type": "integer", "default": 1, "minimum": 1 } },
+          { "in": "query", "name": "offset", "schema": { "type": "integer", "default": 10, "minimum": 1 } },
+          { "in": "query", "name": "sortBy", "schema": { "type": "string", "enum": ["appsReceived_asc", "appsReceived_desc", "relevance_desc", "deadline_asc", "deadline_desc"] } },
+          { "in": "query", "name": "tags", "schema": { "type": "string" } },
+          { "in": "query", "name": "categories", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "count": { "type": "integer", "example": 10 },
+                    "total": { "type": "integer", "example": 120 },
+                    "pages": { "type": "integer", "example": 12 },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Job" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/job/scholarships": {
+      "get": {
+        "tags": ["Jobs"],
+        "summary": "List scholarships",
+        "description": "Retrieves scholarships. Equivalent to GET /v1/job?type=scholarship.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "in": "query", "name": "freeText", "schema": { "type": "string" } },
+          { "in": "query", "name": "pageNo", "schema": { "type": "integer", "default": 1, "minimum": 1 } },
+          { "in": "query", "name": "offset", "schema": { "type": "integer", "default": 10, "minimum": 1 } },
+          { "in": "query", "name": "sortBy", "schema": { "type": "string", "enum": ["appsReceived_asc", "appsReceived_desc", "relevance_desc", "deadline_asc", "deadline_desc"] } },
+          { "in": "query", "name": "tags", "schema": { "type": "string" } },
+          { "in": "query", "name": "categories", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "count": { "type": "integer", "example": 10 },
+                    "total": { "type": "integer", "example": 120 },
+                    "pages": { "type": "integer", "example": 12 },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Job" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/job/extracurriculars": {
+      "get": {
+        "tags": ["Jobs"],
+        "summary": "List extracurriculars",
+        "description": "Retrieves extracurricular opportunities (Volunteer/Activities). Equivalent to GET /v1/job?type=extracurricular.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "in": "query", "name": "freeText", "schema": { "type": "string" } },
+          { "in": "query", "name": "pageNo", "schema": { "type": "integer", "default": 1, "minimum": 1 } },
+          { "in": "query", "name": "offset", "schema": { "type": "integer", "default": 10, "minimum": 1 } },
+          { "in": "query", "name": "sortBy", "schema": { "type": "string", "enum": ["appsReceived_asc", "appsReceived_desc", "relevance_desc", "deadline_asc", "deadline_desc"] } },
+          { "in": "query", "name": "tags", "schema": { "type": "string" } },
+          { "in": "query", "name": "categories", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "count": { "type": "integer", "example": 10 },
+                    "total": { "type": "integer", "example": 120 },
+                    "pages": { "type": "integer", "example": 12 },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Job" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/job/{id}": {
       "get": {
         "tags": ["Jobs"],
