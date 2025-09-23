@@ -5,6 +5,8 @@ import asyncHandler from "../common/middleware/async";
 import ErrorResponse from "../common/utils/errorResponse";
 import { IJob } from "../types/jobType";
 import "../types/authType";
+import User from "../models/userModel";
+import Interest from "../models/interestsModel";
 
 // Get next job for swiping (personalized based on user's swipe history)
 export const getNextJob = asyncHandler(
@@ -14,6 +16,22 @@ export const getNextJob = asyncHandler(
 
         if (!userId) {
             return next(new ErrorResponse("User authentication required", 401));
+        }
+
+        // Load user's saved preferences and interests
+        const userDoc = await User.findById((req.user as any).id).lean();
+        const jobPrefs = (userDoc as any)?.jobPreferences || {};
+        let interestNames: string[] = [];
+        if (Array.isArray(userDoc?.interests) && userDoc!.interests.length > 0) {
+            try {
+                const interests = await Interest.find({ _id: { $in: userDoc!.interests } }).lean();
+                const fetched = (interests || []).map((i: any) => String(i?.name || '').trim()).filter(Boolean);
+                // Also include any values already stored as names (not matching an existing Interest _id)
+                const rawAsNames = (userDoc!.interests as any[])
+                    .filter((v) => typeof v === 'string' && !fetched.includes(v))
+                    .map((v) => String(v));
+                interestNames = Array.from(new Set([...fetched, ...rawAsNames])) as string[];
+            } catch { /* ignore */ }
         }
 
         // Get jobs the user has already swiped on
@@ -48,6 +66,34 @@ export const getNextJob = asyncHandler(
 
         // Enforce CSV-origin opportunities (support legacy docs without sourceType)
         query.$and = [...(query.$and || []), { $or: [{ sourceType: 'csv' }, { source: 'CSV Import' }] }];
+
+        // Apply user's saved work mode and locations as hard filters when present
+        const remoteRegex = /remote|virtual|anywhere/i;
+        if (jobPrefs?.workMode === 'remote') {
+            query.$and = [
+                ...(query.$and || []),
+                { $or: [{ isRemote: true }, { location: remoteRegex }] }
+            ];
+        } else if (jobPrefs?.workMode === 'onsite' || jobPrefs?.workMode === 'hybrid') {
+            query.$and = [
+                ...(query.$and || []),
+                { $or: [{ isRemote: false }, { location: { $not: remoteRegex } }] }
+            ];
+        }
+
+        const locs: string[] = Array.isArray(jobPrefs?.locations) ? jobPrefs!.locations.filter(Boolean) : [];
+        if (locs.length) {
+            const locRegexes = locs.map((l) => new RegExp(String(l).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+            query.$and = [
+                ...(query.$and || []),
+                {
+                    $or: [
+                        { location: { $in: locRegexes } },
+                        { 'company.address': { $in: locRegexes } }
+                    ]
+                }
+            ];
+        }
 
         // Optional filtering by high-level type / tab selection
         const rawType = (type || opportunityType || '').toString().trim().toLowerCase();
@@ -107,7 +153,7 @@ export const getNextJob = asyncHandler(
         // If user has preferences, prioritize jobs with matching tags/categories
         let sortQuery: any = { relevancyScore: -1, createdAt: -1 };
 
-        if (preferredTags.size > 0 || preferredCategories.size > 0) {
+        if (preferredTags.size > 0 || preferredCategories.size > 0 || interestNames.length > 0) {
             // First try to find jobs matching user preferences
             const preferenceQuery: any = {
                 ...query,
@@ -116,7 +162,8 @@ export const getNextJob = asyncHandler(
                     {
                         $or: [
                             { tags: { $in: Array.from(preferredTags) } },
-                            { categories: { $in: Array.from(preferredCategories) } }
+                            { categories: { $in: Array.from(preferredCategories) } },
+                            { categories: { $in: interestNames } },
                         ]
                     }
                 ]

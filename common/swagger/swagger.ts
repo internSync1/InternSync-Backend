@@ -60,7 +60,8 @@ const swaggerDocument: any = {
           "dateOfBirth": { "type": "string", "format": "date" },
           "isActive": { "type": "boolean", "example": true },
           "createdAt": { "type": "string", "format": "date-time" },
-          "updatedAt": { "type": "string", "format": "date-time" }
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "jobPreferences": { "$ref": "#/components/schemas/JobPreferences" }
         },
         "required": ["firebaseUid", "email"]
       },
@@ -494,6 +495,14 @@ const swaggerDocument: any = {
             "example": "Invalid verification code"
           }
         }
+      },
+      "JobPreferences": {
+        "type": "object",
+        "properties": {
+          "workMode": { "type": "string", "enum": ["remote", "hybrid", "onsite"] },
+          "employmentType": { "type": "string", "enum": ["full_time", "part_time", "contract", "internship"] },
+          "locations": { "type": "array", "items": { "type": "string" } }
+        }
       }
     }
   },
@@ -764,7 +773,7 @@ const swaggerDocument: any = {
             "name": "offset",
             "schema": { "type": "integer", "default": 10, "minimum": 1 },
             "required": false,
-            "description": "Number of items per pageNo."
+            "description": "Page size (items per page)."
           },
           { "in": "query", "name": "status", "schema": { "type": "string" } },
           { "in": "query", "name": "startDate", "schema": { "type": "string", "format": "date" } },
@@ -781,7 +790,14 @@ const swaggerDocument: any = {
           { "in": "query", "name": "stipendMax", "schema": { "type": "number" } },
           { "in": "query", "name": "deadlineBefore", "schema": { "type": "string", "format": "date" } },
           { "in": "query", "name": "deadlineAfter", "schema": { "type": "string", "format": "date" } },
-          { "in": "query", "name": "featured", "schema": { "type": "boolean" } }
+          { "in": "query", "name": "featured", "schema": { "type": "boolean" } },
+          {
+            "in": "query",
+            "name": "useUserPrefs",
+            "schema": { "type": "boolean" },
+            "required": false,
+            "description": "If true and a valid token is provided (optional), results are filtered using the user's saved jobPreferences and interests."
+          }
         ]
       },
       "responses": {
@@ -1898,6 +1914,39 @@ const swaggerDocument: any = {
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/FileUploadResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/user/preferences": {
+      "put": {
+        "tags": ["User Profile"],
+        "summary": "Update job preferences",
+        "description": "Updates only the user's job preferences (workMode, employmentType, locations).",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/JobPreferences" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preferences updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Preferences updated" },
+                    "data": { "$ref": "#/components/schemas/JobPreferences" }
+                  }
+                }
               }
             }
           }

@@ -32,6 +32,13 @@ const AppreciationSchema = new Schema<Appreciation>({
   url: { type: String, trim: true },
 });
 
+// Job preference sub-schema to capture onboarding answers
+const JobPreferencesSchema = new Schema({
+  workMode: { type: String, enum: ['remote', 'hybrid', 'onsite'], default: undefined },
+  employmentType: { type: String, enum: ['full_time', 'part_time', 'contract', 'internship'], default: undefined },
+  locations: [{ type: String }],
+}, { _id: false });
+
 const UserSchema = new Schema<IUserDocument>(
   {
     _id: { type: String, default: uuidv4, required: true },
@@ -93,6 +100,8 @@ const UserSchema = new Schema<IUserDocument>(
         answer: String,
       },
     ],
+    // Persisted onboarding preferences
+    jobPreferences: { type: JobPreferencesSchema, default: {} },
     aboutMe: { type: String, default: "" },
     resumeUrl: { type: String, default: "" },
     workExperience: [WorkExperienceSchema],

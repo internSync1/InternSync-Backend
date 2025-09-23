@@ -16,6 +16,7 @@ import {
   updateHeadline,
   uploadProfilePicture,
   uploadResume,
+  updateJobPreferences,
 } from "../controllers/userController";
 import { firebaseAuth } from "../common/middleware/firebaseAuth";
 import multer from "multer";
@@ -29,6 +30,9 @@ router.post("/sync", firebaseAuth, (req: Request, res, next) => syncUserWithFire
 
 router.put("/profile", firebaseAuth, (req: Request, res, next) => updateUserProfile(req as any, res, next));
 router.get("/profile", firebaseAuth, (req: Request, res, next) => getUserProfile(req as any, res, next));
+
+// Onboarding job preferences
+router.put('/preferences', firebaseAuth, (req: Request, res, next) => updateJobPreferences(req as any, res, next));
 
 // Focused profile endpoints
 router.put('/about', firebaseAuth, (req: Request, res, next) => updateAboutMe(req as any, res, next));

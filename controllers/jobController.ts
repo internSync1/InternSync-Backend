@@ -7,6 +7,8 @@ import { IJob } from "../types/jobType";
 import { IPaginationResponse, IPaginationRequest, IPaginateOptions } from "../types/paginationType";
 import { paginate } from "../utils/pagination";
 import Application from "../models/applicationModel";
+import User from "../models/userModel";
+import Interest from "../models/interestsModel";
 
 export const getAllJobs = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -29,7 +31,8 @@ export const getAllJobs = asyncHandler(
             deadlineAfter,
             featured,
             type,
-            opportunityType
+            opportunityType,
+            useUserPrefs
         }: IPaginationRequest & {
             status?: string;
             startDate?: string;
@@ -47,6 +50,7 @@ export const getAllJobs = asyncHandler(
             deadlineBefore?: string;
             deadlineAfter?: string;
             featured?: string;
+            useUserPrefs?: string;
         } = req.query;
 
         const page = Number(pageNo);
@@ -161,6 +165,75 @@ export const getAllJobs = asyncHandler(
             filterQuery['description.stipend.amount'] = {} as any;
             if (stipendMin) (filterQuery['description.stipend.amount'] as any).$gte = Number(stipendMin);
             if (stipendMax) (filterQuery['description.stipend.amount'] as any).$lte = Number(stipendMax);
+        }
+
+        // Apply user preferences and interests when requested and available
+        const useUserPrefsFlag = String(useUserPrefs || '').toLowerCase() === 'true';
+        if (useUserPrefsFlag && (req as any).user) {
+            try {
+                const userCtx: any = (req as any).user;
+                const userDoc = userCtx?.id ? await User.findById(userCtx.id).lean() : null;
+                const prefs: any = (userDoc as any)?.jobPreferences || {};
+
+                // Work mode
+                const remoteRegex = /remote|virtual|anywhere/i;
+                if (prefs?.workMode === 'remote') {
+                    filterQuery.$and = [
+                        ...(filterQuery.$and || []),
+                        { $or: [{ isRemote: true }, { location: remoteRegex }] }
+                    ];
+                } else if (prefs?.workMode === 'onsite' || prefs?.workMode === 'hybrid') {
+                    filterQuery.$and = [
+                        ...(filterQuery.$and || []),
+                        { $or: [{ isRemote: false }, { location: { $not: remoteRegex } }] }
+                    ];
+                }
+
+                // Employment type (heuristic using weeklyHours/tags/categories)
+                if (prefs?.employmentType === 'full_time') {
+                    const ftRegex = /full[-\s]?time/i;
+                    filterQuery.$and = [
+                        ...(filterQuery.$and || []),
+                        {
+                            $or: [
+                                { weeklyHours: { $gte: 35 } },
+                                { tags: { $in: [ftRegex, 'Full Time', 'Full-Time'] } },
+                                { categories: { $in: [ftRegex, 'Full Time', 'Full-Time'] } },
+                                { labels: { $in: [ftRegex, 'Full Time', 'Full-Time'] } }
+                            ]
+                        }
+                    ];
+                }
+
+                // Locations
+                const locs: string[] = Array.isArray(prefs?.locations) ? prefs.locations.filter(Boolean) : [];
+                if (locs.length) {
+                    const locRegexes = locs.map((l) => new RegExp(String(l).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+                    filterQuery.$and = [
+                        ...(filterQuery.$and || []),
+                        { $or: [{ location: { $in: locRegexes } }, { 'company.address': { $in: locRegexes } }] }
+                    ];
+                }
+
+                // Interests -> categories/tags
+                let interestNames: string[] = [];
+                if (Array.isArray(userDoc?.interests) && userDoc!.interests.length > 0) {
+                    const fetched = await Interest.find({ _id: { $in: userDoc!.interests } }, { name: 1 }).lean();
+                    const fetchedNames = (fetched || []).map((i: any) => String(i?.name || '').trim()).filter(Boolean);
+                    const rawAsNames = (userDoc!.interests as any[])
+                        .filter((v) => typeof v === 'string' && !fetchedNames.includes(v as string))
+                        .map((v) => String(v));
+                    interestNames = Array.from(new Set([...(fetchedNames as string[]), ...rawAsNames]));
+                }
+                if (interestNames.length) {
+                    filterQuery.$and = [
+                        ...(filterQuery.$and || []),
+                        { $or: [{ categories: { $in: interestNames } }, { tags: { $in: interestNames } }] }
+                    ];
+                }
+            } catch (e) {
+                // Non-fatal; continue without user prefs
+            }
         }
 
         const sortQuery: any = {};

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import asyncHandler from "../common/middleware/async";
 import User from "../models/userModel";
-import { Education, Appreciation } from "../types/userType";
+import { Education, Appreciation, JobPreferences } from "../types/userType";
 
 // Extend Request to include user property and auth status
 interface AuthRequest extends Request {
@@ -44,6 +44,32 @@ function normalizeAppreciationArray(input: any[]): Appreciation[] {
       url: a?.url ? String(a.url) : undefined,
     }))
     .filter((a: Appreciation) => !!a.title);
+}
+
+function normalizeJobPreferences(input: any): Partial<JobPreferences> {
+  if (!input || typeof input !== 'object') input = {};
+  const w = String(input.workMode ?? input.mode ?? input.jobMode ?? '').toLowerCase().trim();
+  let workMode: JobPreferences['workMode'] | undefined = undefined;
+  if (['remote', 'hybrid', 'onsite', 'on-site', 'on site'].includes(w)) {
+    workMode = (w === 'on-site' || w === 'on site') ? 'onsite' : (w as any);
+  }
+  const e = String(input.employmentType ?? input.type ?? input.jobType ?? '').toLowerCase().trim();
+  let employmentType: JobPreferences['employmentType'] | undefined = undefined;
+  if (['full_time', 'fulltime', 'full-time'].includes(e)) employmentType = 'full_time';
+  else if (['part_time', 'parttime', 'part-time'].includes(e)) employmentType = 'part_time';
+  else if (['contract', 'contractor'].includes(e)) employmentType = 'contract';
+  else if (['internship', 'intern'].includes(e)) employmentType = 'internship';
+
+  const locationsRaw = input.locations ?? input.location ?? input.preferredLocations;
+  const locations = Array.isArray(locationsRaw)
+    ? locationsRaw.map((s) => String(s).trim()).filter(Boolean)
+    : (locationsRaw ? [String(locationsRaw).trim()] : []);
+
+  const prefs: Partial<JobPreferences> = {};
+  if (workMode) prefs.workMode = workMode;
+  if (employmentType) prefs.employmentType = employmentType;
+  if (locations.length) prefs.locations = locations.slice(0, 10);
+  return prefs;
 }
 
 // Sync user with Firebase UID and email
@@ -115,9 +141,18 @@ export const updateUserProfile = asyncHandler(
       languages,
       appreciation,
       workExperience,
+      workMode,
+      employmentType,
+      locations,
+      jobPreferences,
     } = req.body;
 
     const resolvedResumeUrl = resumeUrlRaw || resumeRaw;
+
+    const mergedPrefs = {
+      ...normalizeJobPreferences({ workMode, employmentType, locations }),
+      ...normalizeJobPreferences(jobPreferences),
+    } as Partial<JobPreferences>;
 
     const fieldsToUpdate = {
       ...(firstName && { firstName }),
@@ -136,6 +171,7 @@ export const updateUserProfile = asyncHandler(
       ...(languages && { languages }),
       ...(Array.isArray(appreciation) && { appreciation: normalizeAppreciationArray(appreciation as any[]) }),
       ...(workExperience && { workExperience }),
+      ...(Object.keys(mergedPrefs).length > 0 && { jobPreferences: mergedPrefs }),
     };
     await User.findOneAndUpdate({ firebaseUid: uid }, fieldsToUpdate, {
       new: true,
@@ -363,4 +399,16 @@ export const updateHeadline = asyncHandler(async (req: AuthRequest, res: Respons
   const { headline } = req.body as { headline?: string };
   await User.findOneAndUpdate({ firebaseUid: uid }, { $set: { headline: headline || '' } }, { new: true });
   res.status(200).json({ success: true, message: 'Headline updated' });
+});
+
+// Dedicated endpoint to update just job preferences
+export const updateJobPreferences = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { uid } = req.user;
+  const prefs = normalizeJobPreferences(req.body || {});
+  const user = await User.findOneAndUpdate(
+    { firebaseUid: uid },
+    { $set: { jobPreferences: prefs } },
+    { new: true, runValidators: true }
+  );
+  res.status(200).json({ success: true, message: 'Preferences updated', data: user?.jobPreferences || prefs });
 });

@@ -30,6 +30,12 @@ export interface Appreciation {
   url?: string; // reference link or certificate URL
 }
 
+export interface JobPreferences {
+  workMode?: 'remote' | 'hybrid' | 'onsite';
+  employmentType?: 'full_time' | 'part_time' | 'contract' | 'internship';
+  locations?: string[];
+}
+
 export interface IUserDocument extends Document {
   firebaseUid: string;
   firstName: string;
@@ -68,4 +74,5 @@ export interface IUserDocument extends Document {
   skills: string[];
   languages: string[];
   appreciation: Appreciation[];
+  jobPreferences?: JobPreferences;
 }

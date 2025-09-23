@@ -11,7 +11,7 @@ import {
     listScholarships,
     listExtracurriculars
 } from "../controllers/jobController";
-import { firebaseAuth } from "../common/middleware/firebaseAuth";
+import { firebaseAuth, optionalFirebaseAuth } from "../common/middleware/firebaseAuth";
 import { authorize } from "../common/middleware/auth";
 import { UserRole } from "../constant/userRoles";
 import { validateCreateJob } from "../common/validators/jobValidator";
@@ -20,10 +20,11 @@ import { handleValidationErrors } from "../common/middleware/validation";
 const router = Router();
 
 // Public routes
-router.get("/", getAllJobs);
-router.get("/internships", listInternships);
-router.get("/scholarships", listScholarships);
-router.get("/extracurriculars", listExtracurriculars);
+// Optional auth allows personalizing with useUserPrefs=true without requiring a token
+router.get("/", optionalFirebaseAuth, getAllJobs);
+router.get("/internships", optionalFirebaseAuth, listInternships);
+router.get("/scholarships", optionalFirebaseAuth, listScholarships);
+router.get("/extracurriculars", optionalFirebaseAuth, listExtracurriculars);
 router.get("/:id", getJobById);
 
 // Admin routes
