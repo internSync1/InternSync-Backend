@@ -18,12 +18,13 @@ const ApplicationSchema = new Schema<IApplication>(
         },
         applicantName: { type: String, required: true },
         resumeUrl: { type: String, required: true },
+        portfolioUrl: { type: String },
         text: { type: String, required: true },
         status: {
             type: String,
             enum: Object.values(ApplicationStatus),
             default: ApplicationStatus.PENDING,
-          }
+        }
     },
     { timestamps: true, versionKey: false }
 );

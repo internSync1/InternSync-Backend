@@ -13,7 +13,7 @@ import User from "../models/userModel";
 import Notification from "../models/notificationModel";
 import pushService from "../services/pushService";
 
-export const createApplication = asyncHandler(async (req: ProtectedRequest, res: Response, next: NextFunction) => {
+export const createApplication = asyncHandler(async (req: ProtectedRequest & { file?: Express.Multer.File }, res: Response, next: NextFunction) => {
     const { jobId } = req.params;
     const userId = req.user.id;
 
@@ -31,14 +31,25 @@ export const createApplication = asyncHandler(async (req: ProtectedRequest, res:
         return next(new ErrorResponse(`This job is no longer accepting applications.`, 400));
     }
 
-    const { ApplicantName, resumeUrl, portfolioLink, text } = req.body;
+    // Expect multipart/form-data with a resume file
+    if (!req.file) {
+        return next(new ErrorResponse('Resume file is required (field name: "resume")', 400));
+    }
+
+    const { applicantName, text, portfolioUrl } = req.body as any;
+
+    const publicUrl = `/uploads/${req.file.filename}`;
+
+    const fallbackNameParts = [req.user.firstName, req.user.lastName].filter(Boolean);
+    const fallbackName = fallbackNameParts.length ? fallbackNameParts.join(' ') : '';
+    const finalApplicantName = (applicantName || fallbackName || '').trim();
 
     const application = await Application.create({
         jobId,
         userId,
-        applicantName: ApplicantName ? ApplicantName : (req.user.firstName + ' ' + req.user.lastName) ? req.user.firstName + ' ' + req.user.lastName : '',
-        resumeUrl,
-        portfolioLink,
+        applicantName: finalApplicantName,
+        resumeUrl: publicUrl,
+        portfolioUrl,
         text,
         status: ApplicationStatus.PENDING,
     });
