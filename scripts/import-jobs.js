@@ -206,10 +206,7 @@ async function importJobs() {
     try {
         console.log('Starting job import from CSV...');
         
-        // Clear existing jobs (CSV imports only)
-        await Job.deleteMany({ sourceType: 'csv' });
-        console.log('Cleared existing CSV-sourced jobs');
-        
+        // Do NOT delete existing CSV-sourced jobs; preserve IDs so bookmarks remain intact
         const jobs = [];
         
         fs.createReadStream('./opportunities_with_categories_v2.csv')
@@ -276,10 +273,42 @@ async function importJobs() {
                         const keyBase = `${(j.title||'').toLowerCase().trim()}|${(j.company?.name||'').toLowerCase().trim()}|${(j.sourceUrl||'').toLowerCase().trim()}`;
                         const key = keyBase || j._id;
                         j.importKey = key;
+
+                        // Fields to update every run (reflect latest CSV data)
+                        const setFields = {
+                            title: j.title,
+                            company: j.company,
+                            description: j.description,
+                            duration: j.duration,
+                            location: j.location,
+                            skillsRequired: j.skillsRequired,
+                            labels: j.labels,
+                            startDate: j.startDate,
+                            endDate: j.endDate,
+                            applicationDeadline: j.applicationDeadline,
+                            status: j.status,
+                            jobType: j.jobType,
+                            weeklyHours: j.weeklyHours,
+                            isRemote: j.isRemote,
+                            visibility: j.visibility,
+                            relevancyScore: j.relevancyScore,
+                            tags: j.tags,
+                            categories: j.categories,
+                            sourceUrl: j.sourceUrl,
+                            source: j.source,
+                            prize: j.prize,
+                            bannerImageUrl: j.bannerImageUrl,
+                            sourceType: j.sourceType,
+                            applyMode: j.applyMode,
+                            // Ensure existing docs also receive/import the key for future runs
+                            importKey: key,
+                        };
+
                         return {
                             updateOne: {
-                                filter: { importKey: key },
-                                update: { $setOnInsert: j },
+                                // Match by importKey when present, otherwise by composite identity
+                                filter: { $or: [ { importKey: key }, { title: j.title, 'company.name': j.company?.name, sourceUrl: j.sourceUrl } ] },
+                                update: { $set: setFields, $setOnInsert: { _id: j._id } },
                                 upsert: true,
                             }
                         };
